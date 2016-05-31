@@ -82,7 +82,7 @@ function determineMessage(ruleName, message)
   return message || Validation.Rules[ ruleName ].message;
 }
 
-function joinFriendly(arr, lastSeparator, itemSeparator, getAlias)
+function joinFriendly(arr, lastSeparatorCustom, itemSeparatorCustom, getAlias)
 {
   var copy = arr.slice();
 
@@ -95,8 +95,8 @@ function joinFriendly(arr, lastSeparator, itemSeparator, getAlias)
   }
 
   var last = copy.pop();
-  var lastSeparator = lastSeparator || 'and';
-  var itemSeparator = itemSeparator || ', ';
+  var lastSeparator = lastSeparatorCustom || 'and';
+  var itemSeparator = itemSeparatorCustom || ', ';
 
   switch (copy.length) {
     case 0:

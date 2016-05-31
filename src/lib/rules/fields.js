@@ -177,4 +177,4 @@ function fieldsRuleGenerator(ruleName, defaultMessage, isInvalid)
   };
 
   Validation.Rules[ ruleName ].message = defaultMessage;
-};
+}

@@ -21,7 +21,7 @@ Rekord.on( Rekord.Events.Plugins, function(model, db, options)
 
   for ( var field in rules )
   {
-    db.validations[ field ] = Validation.parseRules( rules[ field ], field, db, getAlias, messages[ field ] )
+    db.validations[ field ] = Validation.parseRules( rules[ field ], field, db, getAlias, messages[ field ] );
   }
 
   addMethod( model.prototype, '$validate', function()
@@ -40,7 +40,7 @@ Rekord.on( Rekord.Events.Plugins, function(model, db, options)
       var value = this.$get( field );
       var fieldValid = true;
 
-      var setMessage = function(message)
+      var setMessage = function(message) // jshint ignore:line
       {
         // Only accept for the first valid message
         if ( message && fieldValid )
@@ -130,16 +130,16 @@ var Validation =
       for (var i = 0; i < rules.length; i++)
       {
         var rule = rules[ i ];
-        var validator = this.parseRule( rule, field, database, getAlias, message );
+        var defaultMessageValidator = this.parseRule( rule, field, database, getAlias, message );
 
-        validators.push( validator );
+        validators.push( defaultMessageValidator );
       }
     }
     else if ( isObject( rules ) )
     {
-      for (var rule in rules)
+      for (var ruleProperty in rules)
       {
-        var ruleMessageOrData = rules[ rule ];
+        var ruleMessageOrData = rules[ ruleProperty ];
 
         var ruleMessage = isObject( ruleMessageOrData ) ? ruleMessageOrData.message :
           ( isString( ruleMessageOrData ) ? ruleMessageOrData : undefined );
@@ -147,9 +147,9 @@ var Validation =
         var ruleInput = isObject( ruleMessageOrData ) && ruleMessageOrData.message ? ruleMessageOrData.input :
           ( isString( ruleMessageOrData ) ? undefined : ruleMessageOrData );
 
-        var validator = this.parseRule( rule, field, database, getAlias, ruleMessage || message, ruleInput );
+        var customMessageValidator = this.parseRule( ruleProperty, field, database, getAlias, ruleMessage || message, ruleInput );
 
-        validators.push( validator );
+        validators.push( customMessageValidator );
       }
     }
 

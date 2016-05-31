@@ -12,7 +12,7 @@ listRuleGenerator('not_in',
   '{$alias} must not be one of {$list}.',
   function isInvalid(value, model, inList)
   {
-    return inList( value, model )
+    return inList( value, model );
   }
 );
 

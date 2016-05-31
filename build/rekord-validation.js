@@ -4,6 +4,7 @@
   var Database = Rekord.Database;
   var Promise = Rekord.Promise;
   var Collection = Rekord.Collection;
+  var ModelCollection = Rekord.ModelCollection;
 
   var isEmpty = Rekord.isEmpty;
   var isString = Rekord.isString;
@@ -16,6 +17,7 @@
   var isValue = Rekord.isValue;
   var isPrimitiveArray = Rekord.isPrimitiveArray;
   var isRegExp = Rekord.isRegExp;
+  var isRekord = Rekord.isRekord;
 
   var noop = Rekord.noop;
   var equalsCompare = Rekord.equalsCompare;
@@ -116,7 +118,7 @@ function determineMessage(ruleName, message)
   return message || Validation.Rules[ ruleName ].message;
 }
 
-function joinFriendly(arr, lastSeparator, itemSeparator, getAlias)
+function joinFriendly(arr, lastSeparatorCustom, itemSeparatorCustom, getAlias)
 {
   var copy = arr.slice();
 
@@ -129,8 +131,8 @@ function joinFriendly(arr, lastSeparator, itemSeparator, getAlias)
   }
 
   var last = copy.pop();
-  var lastSeparator = lastSeparator || 'and';
-  var itemSeparator = itemSeparator || ', ';
+  var lastSeparator = lastSeparatorCustom || 'and';
+  var itemSeparator = itemSeparatorCustom || ', ';
 
   switch (copy.length) {
     case 0:
@@ -207,7 +209,7 @@ Rekord.on( Rekord.Events.Plugins, function(model, db, options)
 
   for ( var field in rules )
   {
-    db.validations[ field ] = Validation.parseRules( rules[ field ], field, db, getAlias, messages[ field ] )
+    db.validations[ field ] = Validation.parseRules( rules[ field ], field, db, getAlias, messages[ field ] );
   }
 
   addMethod( model.prototype, '$validate', function()
@@ -226,7 +228,7 @@ Rekord.on( Rekord.Events.Plugins, function(model, db, options)
       var value = this.$get( field );
       var fieldValid = true;
 
-      var setMessage = function(message)
+      var setMessage = function(message) // jshint ignore:line
       {
         // Only accept for the first valid message
         if ( message && fieldValid )
@@ -316,16 +318,16 @@ var Validation =
       for (var i = 0; i < rules.length; i++)
       {
         var rule = rules[ i ];
-        var validator = this.parseRule( rule, field, database, getAlias, message );
+        var defaultMessageValidator = this.parseRule( rule, field, database, getAlias, message );
 
-        validators.push( validator );
+        validators.push( defaultMessageValidator );
       }
     }
     else if ( isObject( rules ) )
     {
-      for (var rule in rules)
+      for (var ruleProperty in rules)
       {
-        var ruleMessageOrData = rules[ rule ];
+        var ruleMessageOrData = rules[ ruleProperty ];
 
         var ruleMessage = isObject( ruleMessageOrData ) ? ruleMessageOrData.message :
           ( isString( ruleMessageOrData ) ? ruleMessageOrData : undefined );
@@ -333,9 +335,9 @@ var Validation =
         var ruleInput = isObject( ruleMessageOrData ) && ruleMessageOrData.message ? ruleMessageOrData.input :
           ( isString( ruleMessageOrData ) ? undefined : ruleMessageOrData );
 
-        var validator = this.parseRule( rule, field, database, getAlias, ruleMessage || message, ruleInput );
+        var customMessageValidator = this.parseRule( ruleProperty, field, database, getAlias, ruleMessage || message, ruleInput );
 
-        validators.push( validator );
+        validators.push( customMessageValidator );
       }
     }
 
@@ -641,7 +643,7 @@ function collectionRuleGenerator(ruleName, defaultMessage, isInvalid)
 
     if ( indexOf( database.fields, matchField ) === -1 )
     {
-      throw otherField + ' is not a valid field for the ' + ruleName + ' rule';
+      throw matchField + ' is not a valid field for the ' + ruleName + ' rule';
     }
 
     var messageTemplate = determineMessage( ruleName, message );
@@ -679,11 +681,11 @@ Validation.Rules.validate = function(field, params, database, getAlias, message)
 
       for (var i = 0; i < value.length; i++)
       {
-        var model = value[ i ];
+        var related = value[ i ];
 
-        if ( model && model.$validate && !model.$validate() )
+        if ( related && related.$validate && !related.$validate() )
         {
-          invalid.push( model );
+          invalid.push( related );
         }
       }
 
@@ -1080,7 +1082,7 @@ function fieldsRuleGenerator(ruleName, defaultMessage, isInvalid)
   };
 
   Validation.Rules[ ruleName ].message = defaultMessage;
-};
+}
 
 // exists:X,Y
 foreignRuleGenerator('exists',
@@ -1299,7 +1301,7 @@ listRuleGenerator('not_in',
   '{$alias} must not be one of {$list}.',
   function isInvalid(value, model, inList)
   {
-    return inList( value, model )
+    return inList( value, model );
   }
 );
 
@@ -1949,22 +1951,29 @@ Validation.Rules.startOfDay = function(field, params, database, alias, message)
 
 Validation.Rules.trim = function(field, params, database, alias, message)
 {
-  // String.trim polyfill
-  if ( !String.prototype.trim )
+  var trim = (function()
   {
+    if ( String.prototype.trim )
+    {
+      return function(x) {
+        return x.trim();
+      };
+    }
+
     var regex = /^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g;
 
-    String.prototype.trim = function()
+    return function(x)
     {
-      return this.replace( regex, '' );
+      return x.replace( regex, '' );
     };
-  }
+
+  })();
 
   return function(value, model, setMessage)
   {
     if ( isString( value ) )
     {
-      value = value.trim();
+      value = trim( value );
     }
 
     return value;
@@ -2010,4 +2019,4 @@ Validation.Rules.unbase64 = function(field, params, database, alias, message)
   Rekord.checkNoParams = checkNoParams;
   Rekord.generateMessage = generateMessage;
 
-})(this, Rekord);
+})(this, this.Rekord);

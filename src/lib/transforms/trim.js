@@ -1,21 +1,28 @@
 Validation.Rules.trim = function(field, params, database, alias, message)
 {
-  // String.trim polyfill
-  if ( !String.prototype.trim )
+  var trim = (function()
   {
+    if ( String.prototype.trim )
+    {
+      return function(x) {
+        return x.trim();
+      };
+    }
+
     var regex = /^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g;
 
-    String.prototype.trim = function()
+    return function(x)
     {
-      return this.replace( regex, '' );
+      return x.replace( regex, '' );
     };
-  }
+
+  })();
 
   return function(value, model, setMessage)
   {
     if ( isString( value ) )
     {
-      value = value.trim();
+      value = trim( value );
     }
 
     return value;

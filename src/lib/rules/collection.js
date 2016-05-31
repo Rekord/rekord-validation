@@ -65,7 +65,7 @@ function collectionRuleGenerator(ruleName, defaultMessage, isInvalid)
 
     if ( indexOf( database.fields, matchField ) === -1 )
     {
-      throw otherField + ' is not a valid field for the ' + ruleName + ' rule';
+      throw matchField + ' is not a valid field for the ' + ruleName + ' rule';
     }
 
     var messageTemplate = determineMessage( ruleName, message );
@@ -103,11 +103,11 @@ Validation.Rules.validate = function(field, params, database, getAlias, message)
 
       for (var i = 0; i < value.length; i++)
       {
-        var model = value[ i ];
+        var related = value[ i ];
 
-        if ( model && model.$validate && !model.$validate() )
+        if ( related && related.$validate && !related.$validate() )
         {
-          invalid.push( model );
+          invalid.push( related );
         }
       }
 

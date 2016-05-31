@@ -24,4 +24,4 @@
   Rekord.checkNoParams = checkNoParams;
   Rekord.generateMessage = generateMessage;
 
-})(this, Rekord);
+})(this, this.Rekord);

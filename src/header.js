@@ -4,6 +4,7 @@
   var Database = Rekord.Database;
   var Promise = Rekord.Promise;
   var Collection = Rekord.Collection;
+  var ModelCollection = Rekord.ModelCollection;
 
   var isEmpty = Rekord.isEmpty;
   var isString = Rekord.isString;
@@ -16,6 +17,7 @@
   var isValue = Rekord.isValue;
   var isPrimitiveArray = Rekord.isPrimitiveArray;
   var isRegExp = Rekord.isRegExp;
+  var isRekord = Rekord.isRekord;
 
   var noop = Rekord.noop;
   var equalsCompare = Rekord.equalsCompare;
