@@ -23,23 +23,32 @@ The easiest way to install rekord-validation is through bower via `bower install
 // Simplest rule definition
 var Task = Rekord({
   name: 'task',
-  fields: ['name', 'done', 'done_at'],
+  fields: ['name', 'details', 'done', 'done_at'],
   validation: {
     rules: {
       name: 'required|alpha_dash',
+      details: '$custom', // custom function
       done: 'yesno',
       done_at: 'if:done:accepted|required|date_like'
     },
     required: true // the rules must pass to $save model instances
+  },
+  methods: {
+    $custom: function(value, getAlias, specifiedMessage) {
+      if ( value.length > 140 ) {
+        return 'Details can be no larger than 140 characters.'
+      }
+    }
   }
 });
 
-var t0 = new Task({name: '^', done: true});
+var t0 = new Task({name: '^', done: true, details: '0...141'});
 t0.$save();
 t0.$valid; // false
 t0.$validationMessages; // array of below messages
 t0.$validations; /* {
   name: 'name should only contain alpha-numeric characters, dashes, and underscores.',
+  details: 'Details can be no larger than 140 characters.',
   done_at: 'done_at is required.'
 } */
 
@@ -62,12 +71,12 @@ var Task = Rekord({
 });
 
 var t1 = new Task({name: '', done: false});
-t1.$save(); /* {
+t1.$validate(); /* {
   name: 'Task name is required.'
 } */
 
 var t2 = new Task({name: 'task2', done: true, done_at: 'not date'});
-t2.$save(); /* {
+t2.$validate(); /* {
   done_at: 'Task completed at must be a valid date.'
 } */
 
@@ -89,7 +98,7 @@ var Task = Rekord({
 });
 
 var t3 = new Task({name: '?', done: true, done_at: 'not date'});
-t3.$save(); /* {
+t3.$validate(); /* {
   name: 'Task name is required and must be alpha-numeric and can contain dashes and hyphens.',
   done_at: 'When a task is completed, the completed date is required.'
 } */
@@ -118,13 +127,13 @@ var Task = Rekord({
 });
 
 var t4 = new Task({name: '?', done: true, done_at: 'not date'});
-t4.$save(); /* {
+t4.$validate(); /* {
   name: 'Task name must be alpha-numeric and can contain dashes and hyphens.',
   done_at: 'Task completed date must be a valid date when the task is complete.'
 } */
 
 var t5 = new Task({done: true});
-t5.$save(); /* {
+t5.$validate(); /* {
   name: 'Task name is required.',
   done_at: 'Task completed date is required when the task is complete.'
 } */
