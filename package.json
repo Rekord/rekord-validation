@@ -1,6 +1,6 @@
 {
   "name": "rekord-validation",
-  "version": "1.0.1",
+  "version": "1.4.0",
   "description": "Advanced validation rules for rekord",
   "author": "Philip Diffenderfer",
   "license": "MIT",
@@ -31,6 +31,6 @@
     "merge-stream": "^1.0.0"
   },
   "dependencies": {
-    "rekord": "^1.2.0"
+    "rekord": "~1.4.0"
   }
 }
