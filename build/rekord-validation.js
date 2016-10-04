@@ -1,4 +1,4 @@
-/* rekord-validation 1.4.0 - Advanced validation rules for rekord by Philip Diffenderfer */
+/* rekord-validation 1.4.1 - Advanced validation rules for rekord by Philip Diffenderfer */
 (function(global, Rekord, undefined)
 {
   var Model = Rekord.Model;
@@ -1278,9 +1278,11 @@ function subRuleGenerator(ruleName, isInvalid)
         }
       };
 
+      var testValue = otherField === field ? value : model.$get( otherField );
+
       for (var i = 0; i < validators.length; i++)
       {
-        validators[ i ]( value, model, setInvalid );
+        validators[ i ]( testValue, model, setInvalid );
       }
 
       return isInvalid( invalids, validators.length ) ? Validation.Stop : value;

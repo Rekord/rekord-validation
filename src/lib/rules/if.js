@@ -81,9 +81,11 @@ function subRuleGenerator(ruleName, isInvalid)
         }
       };
 
+      var testValue = otherField === field ? value : model.$get( otherField );
+
       for (var i = 0; i < validators.length; i++)
       {
-        validators[ i ]( value, model, setInvalid );
+        validators[ i ]( testValue, model, setInvalid );
       }
 
       return isInvalid( invalids, validators.length ) ? Validation.Stop : value;
