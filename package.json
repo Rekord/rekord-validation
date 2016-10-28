@@ -1,9 +1,10 @@
 {
   "name": "rekord-validation",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "Advanced validation rules for rekord",
   "author": "Philip Diffenderfer",
   "license": "MIT",
+  "main": "build/rekord-validation.js",
   "repository": {
     "type": "git",
     "url": "git://github.com/Rekord/rekord-validation.git"

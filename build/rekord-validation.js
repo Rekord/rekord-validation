@@ -1,4 +1,4 @@
-/* rekord-validation 1.4.1 - Advanced validation rules for rekord by Philip Diffenderfer */
+/* rekord-validation 1.4.2 - Advanced validation rules for rekord by Philip Diffenderfer */
 (function(global, Rekord, undefined)
 {
   var Model = Rekord.Model;
