@@ -1,5 +1,4 @@
 
-
   Rekord.Validation = Validation;
 
   Rekord.ruleGenerator = ruleGenerator;
@@ -24,4 +23,6 @@
   Rekord.checkNoParams = checkNoParams;
   Rekord.generateMessage = generateMessage;
 
-})(this, this.Rekord);
+  return Rekord;
+
+}));
