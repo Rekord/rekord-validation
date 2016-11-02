@@ -1,11 +1,11 @@
-/* rekord-validation 1.4.3 - Advanced validation rules for rekord by Philip Diffenderfer */
+/* rekord-validation 1.4.4 - Advanced validation rules for rekord by Philip Diffenderfer */
 // UMD (Universal Module Definition)
 (function (root, factory)
 {
   if (typeof define === 'function' && define.amd) // jshint ignore:line
   {
     // AMD. Register as an anonymous module.
-    define(['Rekord'], function(Rekord) { // jshint ignore:line
+    define(['rekord'], function(Rekord) { // jshint ignore:line
       return factory(root, Rekord);
     });
   }
@@ -14,7 +14,7 @@
     // Node. Does not work with strict CommonJS, but
     // only CommonJS-like environments that support module.exports,
     // like Node.
-    module.exports = factory(global, require('Rekord'));  // jshint ignore:line
+    module.exports = factory(global, require('rekord'));  // jshint ignore:line
   }
   else
   {
