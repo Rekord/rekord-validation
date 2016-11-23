@@ -1,4 +1,4 @@
-/* rekord-validation 1.4.4 - Advanced validation rules for rekord by Philip Diffenderfer */
+/* rekord-validation 1.5.0 - Advanced validation rules for rekord by Philip Diffenderfer */
 // UMD (Universal Module Definition)
 (function (root, factory)
 {
@@ -29,6 +29,7 @@
   var Promise = Rekord.Promise;
   var Collection = Rekord.Collection;
   var ModelCollection = Rekord.ModelCollection;
+  var Class = Rekord.Class;
 
   var isEmpty = Rekord.isEmpty;
   var isString = Rekord.isString;
@@ -55,8 +56,87 @@
 
   var parseDate = Rekord.parseDate;
 
-  var addMethod = Rekord.addMethod;
-  var replaceMethod = Rekord.replaceMethod;
+
+function ValidationChain(model, field, validations, onEnd)
+{
+  this.model = model;
+  this.field = field;
+  this.validations = validations;
+  this.onEnd = onEnd;
+}
+
+Class.create( ValidationChain,
+{
+
+  reset: function(value)
+  {
+    this.value = value !== undefined ? value : this.model.$get( this.field );
+    this.updated = false;
+    this.valid = true;
+    this.message = '';
+    this.linkIndex = 0;
+  },
+
+  start: function(value)
+  {
+    this.reset( value );
+    this.call();
+  },
+
+  call: function()
+  {
+    this.validations[ this.linkIndex ]( this.value, this.model, this );
+  },
+
+  update: function(newValue)
+  {
+    this.value = newValue;
+    this.updated = true;
+
+    return this;
+  },
+
+  next: function()
+  {
+    var n = this.validations.length;
+
+    this.linkIndex++;
+
+    if (this.linkIndex === n)
+    {
+      this.onEnd( this );
+    }
+    else if (this.linkIndex < n)
+    {
+      this.call();
+    }
+
+    return this;
+  },
+
+  stop: function()
+  {
+    var n = this.validations.length;
+
+    if (this.linkIndex < n)
+    {
+      this.linkIndex = n - 1;
+      this.next();
+    }
+
+    return this;
+  },
+
+  invalid: function(message)
+  {
+    this.message = message;
+    this.valid = false;
+    this.stop();
+
+    return this;
+  }
+
+});
 
 function tryParseFloat(x)
 {
@@ -118,19 +198,16 @@ function ruleGenerator(ruleName, defaultMessage, isInvalid)
 
     var messageTemplate = determineMessage( ruleName, message );
 
-    return function(value, model, setMessage)
+    return function(value, model, chain)
     {
-      function setValue( newValue )
+      if ( isInvalid( value, model, chain ) )
       {
-        value = newValue;
+        chain.invalid( generateMessage( field, getAlias( field ), value, model, messageTemplate ) );
       }
-
-      if ( isInvalid( value, model, setValue ) )
+      else
       {
-        setMessage( generateMessage( field, getAlias( field ), value, model, messageTemplate ) );
+        chain.next();
       }
-
-      return value;
     };
   };
 
@@ -210,7 +287,7 @@ function generateMessage(field, alias, value, model, message, extra)
   return format( message, base );
 }
 
-Rekord.on( Rekord.Events.Plugins, function(model, db, options)
+Rekord.addPlugin(function(model, db, options)
 {
   var validation = options.validation || Database.Defaults.validation;
 
@@ -236,47 +313,56 @@ Rekord.on( Rekord.Events.Plugins, function(model, db, options)
     db.validations[ field ] = Validation.parseRules( rules[ field ], field, db, getAlias, messages[ field ] );
   }
 
-  addMethod( model.prototype, '$validate', function()
+  Class.method( model, '$validate', function(callback, context)
   {
-    var $this = this;
-
     this.$trigger( Model.Events.PreValidate, [this] );
 
     this.$valid = true;
     this.$validations = {};
     this.$validationMessages.length = 0;
 
+    var chainEnds = 0;
+    var chains = [];
+
+    var onChainEnd = function(chain)
+    {
+      var model = chain.model;
+
+      if (!chain.valid)
+      {
+        model.$validations[ chain.field ] = chain.message;
+        model.$validationMessages.push( chain.message );
+        model.$valid = false;
+      }
+
+      if (++chainEnds === chains.length)
+      {
+        model.$trigger( model.$valid ? Model.Events.ValidatePass : Model.Events.ValidateFail, [model] );
+
+        if ( isFunction( callback ) )
+        {
+          callback.call( context || model, model.$valid );
+        }
+      }
+    };
+
     for (var field in db.validations)
     {
-      var chain = db.validations[ field ];
-      var value = this.$get( field );
-      var fieldValid = true;
+      var validations = db.validations[ field ];
+      var chain = new ValidationChain( this, field, validations, onChainEnd );
 
-      var setMessage = function(message) // jshint ignore:line
-      {
-        // Only accept for the first valid message
-        if ( message && fieldValid )
-        {
-          fieldValid = false;
-
-          $this.$validations[ field ] = message;
-          $this.$validationMessages.push( message );
-          $this.$valid = false;
-        }
-      };
-
-      for (var i = 0; i < chain.length && fieldValid && value !== Validation.Stop; i++)
-      {
-        value = chain[ i ]( value, this, setMessage );
-      }
+      chains.push( chain );
     }
 
-    this.$trigger( this.$valid ? Model.Events.ValidatePass : Model.Events.ValidateFail, [this] );
+    for (var i = 0; i < chains.length; i++)
+    {
+      chains[ i ].start();
+    }
 
     return this.$valid;
   });
 
-  replaceMethod( model.prototype, '$init', function($init)
+  Class.replace( model, '$init', function($init)
   {
     return function()
     {
@@ -290,7 +376,7 @@ Rekord.on( Rekord.Events.Plugins, function(model, db, options)
 
   if ( required )
   {
-    replaceMethod( model.prototype, '$save', function($save)
+    Class.replace( model, '$save', function($save)
     {
       return function()
       {
@@ -301,12 +387,25 @@ Rekord.on( Rekord.Events.Plugins, function(model, db, options)
           return Promise.resolve( this );
         }
 
-        if ( !this.$validate() )
-        {
-          return Promise.resolve( this );
-        }
+        var promise = new Rekord.Promise();
+        var modelInstance = this;
+        var args = arguments;
 
-        return $save.apply( this, arguments );
+        this.$validate(function(valid)
+        {
+          if (!valid)
+          {
+            promise.reject( modelInstance );
+          }
+          else
+          {
+            var saving = $save.apply( modelInstance, args );
+
+            saving.then( promise.resolve, promise.reject, promise.noline, promise.cancel, promise );
+          }
+        });
+
+        return promise;
       };
     });
   }
@@ -409,16 +508,18 @@ var Validation =
 
   customValidator: function(functionName, field, database, getAlias, message)
   {
-    return function(value, model, setMessage)
+    return function(value, model, chain)
     {
-      var result = model[ functionName ]( value, getAlias, message );
+      var result = model[ functionName ]( value, getAlias, message, chain );
 
       if ( isString( result ) )
       {
-        setMessage( result );
+        chain.invalid( result );
       }
-
-      return value;
+      else if ( result !== false )
+      {
+        chain.next();
+      }
     };
   }
 };
@@ -575,17 +676,19 @@ Validation.Rules.accepted = function(field, params, database, getAlias, message)
   var messageTemplate = determineMessage( 'accepted', message );
   var acceptable = Validation.Rules.accepted.acceptable;
 
-  return function(value, model, setMessage)
+  return function(value, model, chain)
   {
     var valueString = (value + '').toLowerCase();
     var accepted = acceptable[ valueString ];
 
     if ( !accepted )
     {
-      setMessage( generateMessage( field, getAlias( field ), value, model, messageTemplate ) );
+      chain.invalid( generateMessage( field, getAlias( field ), value, model, messageTemplate ) );
     }
-
-    return value;
+    else
+    {
+      chain.next();
+    }
   };
 };
 
@@ -677,14 +780,16 @@ function collectionRuleGenerator(ruleName, defaultMessage, isInvalid)
       $matchValue: matchValue
     };
 
-    return function(value, model, setMessage)
+    return function(value, model, chain)
     {
       if ( isInvalid( value, model, matchField, matchValue, equality ) )
       {
-        setMessage( generateMessage( field, getAlias( field ), value, model, messageTemplate, extra ) );
+        chain.invalid( generateMessage( field, getAlias( field ), value, model, messageTemplate, extra ) );
       }
-
-      return value;
+      else
+      {
+        chain.next();
+      }
     };
   };
 
@@ -697,7 +802,7 @@ Validation.Rules.validate = function(field, params, database, getAlias, message)
   var messageOption = params || 'message';
   var messageTemplate = determineMessage( 'validate', message );
 
-  return function(value, model, setMessage)
+  return function(value, model, chain)
   {
     if ( isArray( value ) )
     {
@@ -718,19 +823,25 @@ Validation.Rules.validate = function(field, params, database, getAlias, message)
         switch (messageOption)
         {
           case 'models':
-            setMessage( invalid );
+            chain.invalid( invalid );
             break;
           case 'validations':
-            setMessage( invalid.pluck( '$validations', '$$key' ) );
+            chain.invalid( invalid.pluck( '$validations', '$$key' ) );
             break;
           default: // message
-            setMessage( generateMessage( field, getAlias( field ), value, model, messageTemplate ) );
+            chain.invalid( generateMessage( field, getAlias( field ), value, model, messageTemplate ) );
             break;
         }
       }
+      else
+      {
+        chain.next();
+      }
     }
-
-    return value;
+    else
+    {
+      chain.next();
+    }
   };
 };
 
@@ -771,11 +882,11 @@ dateRuleGenerator('before_on',
 // date
 ruleGenerator('date_like',
   '{$alias} must be a valid date.',
-  function isInvalid(value, model, setValue) {
+  function isInvalid(value, model, chain) {
     var parsed = parseDate( value );
     var invalid = parsed === false;
     if ( !invalid ) {
-      setValue( parsed.getTime() );
+      chain.update( parsed.getTime() );
     }
     return invalid;
   }
@@ -825,7 +936,7 @@ function dateRuleGenerator(ruleName, defaultMessage, isInvalid)
       $date: params
     };
 
-    return function(value, model, setMessage)
+    return function(value, model, chain)
     {
       var parsed = parseDate( value );
 
@@ -837,11 +948,17 @@ function dateRuleGenerator(ruleName, defaultMessage, isInvalid)
 
         if ( isNumber( date ) && isInvalid( value, date ) )
         {
-          setMessage( generateMessage( field, getAlias( field ), value, model, messageTemplate, extra ) );
+          chain.invalid( generateMessage( field, getAlias( field ), value, model, messageTemplate, extra ) );
+        }
+        else
+        {
+          chain.next();
         }
       }
-
-      return value;
+      else
+      {
+        chain.next();
+      }
     };
   };
 
@@ -913,14 +1030,16 @@ function fieldListRuleGenerator(ruleName, defaultMessage, isInvalid)
     };
     var map = mapFromArray( matchValues, true );
 
-    return function(value, model, setMessage)
+    return function(value, model, chain)
     {
       if ( isInvalid( value, model, matchField, matchValues, map ) )
       {
-        setMessage( generateMessage( field, getAlias( field ), value, model, messageTemplate, extra ) );
+        chain.invalid( generateMessage( field, getAlias( field ), value, model, messageTemplate, extra ) );
       }
-
-      return value;
+      else
+      {
+        chain.next();
+      }
     };
   };
 
@@ -930,7 +1049,7 @@ function fieldListRuleGenerator(ruleName, defaultMessage, isInvalid)
 // confirmed:X
 fieldsRuleGenerator('confirmed',
   '{$alias} must match {$fieldAliases}.',
-  function isInvalid(value, model, fields, setValue) {
+  function isInvalid(value, model, fields, chain) {
     var confirmed = true;
 
     for (var i = 0; i < fields.length; i++)
@@ -948,7 +1067,7 @@ fieldsRuleGenerator('confirmed',
 // different:X
 fieldsRuleGenerator('different',
   '{$alias} must not match {$fieldAliases}.',
-  function isInvalid(value, model, fields, setValue) {
+  function isInvalid(value, model, fields, chain) {
     var different = false;
 
     for (var i = 0; i < fields.length; i++)
@@ -966,7 +1085,7 @@ fieldsRuleGenerator('different',
 // if_valid:X
 fieldsRuleGenerator('if_valid',
   '',
-  function isInvalid(value, model, fields, setValue) {
+  function isInvalid(value, model, fields, chain) {
     var valid = true;
 
     for (var i = 0; i < fields.length && valid; i++)
@@ -979,7 +1098,7 @@ fieldsRuleGenerator('if_valid',
 
     if ( !valid )
     {
-      setValue( Validation.Stop );
+      chain.stop();
     }
 
     return false;
@@ -990,7 +1109,7 @@ fieldsRuleGenerator('if_valid',
 // required_with:X,Y,...
 fieldsRuleGenerator('required_with',
   '{$alias} is required.',
-  function isInvalid(value, model, fields, setValue) {
+  function isInvalid(value, model, fields, chain) {
     var required = false;
 
     for (var i = 0; i < fields.length && !required; i++)
@@ -1009,7 +1128,7 @@ fieldsRuleGenerator('required_with',
 // required_with_all:X,Y,...
 fieldsRuleGenerator('required_with_all',
   '{$alias} is required.',
-  function isInvalid(value, model, fields, setValue) {
+  function isInvalid(value, model, fields, chain) {
     var required = true;
 
     for (var i = 0; i < fields.length && required; i++)
@@ -1028,7 +1147,7 @@ fieldsRuleGenerator('required_with_all',
 // required_without:X,Y,...
 fieldsRuleGenerator('required_without',
   '{$alias} is required.',
-  function isInvalid(value, model, fields, setValue) {
+  function isInvalid(value, model, fields, chain) {
     var required = false;
 
     for (var i = 0; i < fields.length && !required; i++)
@@ -1047,7 +1166,7 @@ fieldsRuleGenerator('required_without',
 // required_without_all:X,Y,...
 fieldsRuleGenerator('required_without_all',
   '{$alias} is required.',
-  function isInvalid(value, model, fields, setValue) {
+  function isInvalid(value, model, fields, chain) {
     var required = true;
 
     for (var i = 0; i < fields.length && required; i++)
@@ -1089,19 +1208,16 @@ function fieldsRuleGenerator(ruleName, defaultMessage, isInvalid)
       $fieldAliases: fieldAliases
     };
 
-    return function(value, model, setMessage)
+    return function(value, model, chain)
     {
-      function setValue( newValue )
+      if ( isInvalid( value, model, fields, chain ) )
       {
-        value = newValue;
+        chain.invalid( generateMessage( field, getAlias( field ), value, model, messageTemplate, extra ) );
       }
-
-      if ( isInvalid( value, model, fields, setValue ) )
+      else
       {
-        setMessage( generateMessage( field, getAlias( field ), value, model, messageTemplate, extra ) );
+        chain.next();
       }
-
-      return value;
     };
   };
 
@@ -1201,17 +1317,23 @@ function foreignRuleGenerator(ruleName, defaultMessage, isInvalid)
       $matchAlias: getAlias( fieldName )
     };
 
-    return function(value, model, setMessage)
+    return function(value, model, chain)
     {
       if ( models && isValue( value ) )
       {
         if ( isInvalid( value, model, models, fieldName ) )
         {
-          setMessage( generateMessage( field, getAlias( field ), value, model, messageTemplate, extra ) );
+          chain.invalid( generateMessage( field, getAlias( field ), value, model, messageTemplate, extra ) );
+        }
+        else
+        {
+          chain.next();
         }
       }
-
-      return value;
+      else
+      {
+        chain.next();
+      }
     };
   };
 
@@ -1289,15 +1411,28 @@ function subRuleGenerator(ruleName, isInvalid)
 
     var validators = Validation.parseRules( otherRules, otherField, database, getAlias );
 
-    return function(value, model, setMessage)
+    return function(value, model, chain)
     {
       var invalids = 0;
+      var chainCount = 0;
 
-      var setInvalid = function(message)
+      var onChainEnd = function(innerChain)
       {
-        if ( message )
+        if (!innerChain.valid)
         {
           invalids++;
+        }
+
+        if (++chainCount === validators.length)
+        {
+          if ( isInvalid( invalids, chainCount ) )
+          {
+            chain.stop();
+          }
+          else
+          {
+            chain.next();
+          }
         }
       };
 
@@ -1305,10 +1440,10 @@ function subRuleGenerator(ruleName, isInvalid)
 
       for (var i = 0; i < validators.length; i++)
       {
-        validators[ i ]( testValue, model, setInvalid );
-      }
+        var innerChain = new ValidationChain( model, otherField, [validators[ i ]], onChainEnd );
 
-      return isInvalid( invalids, validators.length ) ? Validation.Stop : value;
+        innerChain.start( testValue );
+      }
     };
   };
 }
@@ -1387,14 +1522,16 @@ function listRuleGenerator(ruleName, defaultMessage, isInvalid)
       $list: list
     };
 
-    return function(value, model, setMessage)
+    return function(value, model, chain)
     {
       if ( isInvalid( value, model, inList ) )
       {
-        setMessage( generateMessage( field, getAlias( field ), value, model, messageTemplate, extra ) );
+        chain.invalid( generateMessage( field, getAlias( field ), value, model, messageTemplate, extra ) );
       }
-
-      return value;
+      else
+      {
+        chain.next();
+      }
     };
   };
 
@@ -1473,7 +1610,7 @@ function rangeRuleGenerator(ruleName, defaultMessages, isInvalid)
       $end: end
     };
 
-    return function(value, model, setMessage)
+    return function(value, model, chain)
     {
       var size = sizeof( value );
       var type = typeof( value );
@@ -1483,10 +1620,12 @@ function rangeRuleGenerator(ruleName, defaultMessages, isInvalid)
       {
         extra.$size = size;
 
-        setMessage( generateMessage( field, getAlias( field ), value, model, typeMessage, extra ) );
+        chain.invalid( generateMessage( field, getAlias( field ), value, model, typeMessage, extra ) );
       }
-
-      return value;
+      else
+      {
+        chain.next();
+      }
     };
   };
 
@@ -1538,11 +1677,15 @@ function regexRuleGenerator(ruleName, defaultMessage, regex)
 
     var messageTemplate = determineMessage( ruleName, message );
 
-    return function(value, model, setMessage)
+    return function(value, model, chain)
     {
       if ( !regex.test( value ) )
       {
-        setMessage( generateMessage( field, getAlias( field ), value, model, messageTemplate ) );
+        chain.invalid( generateMessage( field, getAlias( field ), value, model, messageTemplate ) );
+      }
+      else
+      {
+        chain.next();
       }
 
       return value;
@@ -1577,14 +1720,16 @@ Validation.Rules.regex = function(field, params, database, getAlias, message)
 
   var messageTemplate = determineMessage( 'regex', message );
 
-  return function(value, model, setMessage)
+  return function(value, model, chain)
   {
     if ( !regex.test( value ) )
     {
-      setMessage( generateMessage( field, getAlias( field ), value, model, messageTemplate ) );
+      chain.invalid( generateMessage( field, getAlias( field ), value, model, messageTemplate ) );
     }
-
-    return value;
+    else
+    {
+      chain.next();
+    }
   };
 };
 
@@ -1698,7 +1843,7 @@ function sizeRuleGenerator(ruleName, defaultMessages, isInvalid)
       $number: params
     };
 
-    return function(value, model, setMessage)
+    return function(value, model, chain)
     {
       var size = sizeof( value );
       var type = typeof( value );
@@ -1708,10 +1853,12 @@ function sizeRuleGenerator(ruleName, defaultMessages, isInvalid)
       {
         extra.$size = size;
 
-        setMessage( generateMessage( field, getAlias( field ), value, model, typeMessage, extra ) );
+        chain.invalid( generateMessage( field, getAlias( field ), value, model, typeMessage, extra ) );
       }
-
-      return value;
+      else
+      {
+        chain.next();
+      }
     };
   };
 
@@ -1763,14 +1910,14 @@ ruleGenerator('model',
 
 ruleGenerator('whole',
   '{$alias} must be a whole number.',
-  function isInvalid(value, model, setValue) {
+  function isInvalid(value, model, chain) {
     var parsed = tryParseInt( value );
     var numeric = parseFloat( value );
     var invalid = !isNumber( parsed );
     if ( !invalid ) {
       invalid = Math.floor( parsed ) !== numeric;
       if ( !invalid ) {
-        setValue( parsed );
+        chain.update( parsed );
       }
     }
     return invalid;
@@ -1779,11 +1926,11 @@ ruleGenerator('whole',
 
 ruleGenerator('numeric',
   '{$alias} must be numeric.',
-  function isInvalid(value, model, setValue) {
+  function isInvalid(value, model, chain) {
     var parsed = tryParseFloat( value );
     var invalid = !isNumber( parsed );
     if ( !invalid ) {
-      setValue( parsed );
+      chain.update( parsed );
     }
     return invalid;
   }
@@ -1791,11 +1938,11 @@ ruleGenerator('numeric',
 
 ruleGenerator('yesno',
   '{$alias} must be a yes or no.',
-  function isInvalid(value, model, setValue) {
+  function isInvalid(value, model, chain) {
     var mapped = Validation.Rules.yesno.map[ value ];
     var invalid = !isBoolean( mapped );
     if ( !invalid ) {
-      setValue( mapped );
+      chain.update( mapped );
     }
     return invalid;
   }
@@ -1817,68 +1964,70 @@ Validation.Rules.yesno.map =
 
 Validation.Rules.abs = function(field, params, database, alias, message)
 {
-  return function(value, model, setMessage)
+  return function(value, model, chain)
   {
     value = tryParseFloat( value );
 
     if ( isNumber( value ) )
     {
-      value = Math.abs( value );
+      chain.update( Math.abs( value ) );
     }
 
-    return value;
+    chain.next();
   };
 };
 
 Validation.Rules.apply = function(field, params, database, alias, message)
 {
-  return function(value, model, setMessage)
+  return function(value, model, chain)
   {
     model.$set( field, value );
-    
-    return value;
+
+    chain.next();
   };
 };
 
 Validation.Rules.base64 = function(field, params, database, alias, message)
 {
-  return function(value, model, setMessage)
+  return function(value, model, chain)
   {
     if ( global.btoa )
     {
-      value = global.btoa( value );
+      chain.update( global.btoa( value ) );
     }
 
-    return value;
+    chain.next();
   };
 };
 
 Validation.Rules.ceil = function(field, params, database, alias, message)
 {
-  return function(value, model, setMessage)
+  return function(value, model, chain)
   {
     value = tryParseFloat( value );
-    
+
     if ( isNumber( value ) )
     {
-      value = Math.ceil( value );
+      chain.update( Math.ceil( value ) );
     }
 
-    return value;
+    chain.next();
   };
 };
 
 Validation.Rules.endOfDay = function(field, params, database, alias, message)
 {
-  return function(value, model, setMessage)
+  return function(value, model, chain)
   {
-    return endOfDay( value );
+    chain.update( endOfDay( value ) );
+    
+    chain.next();
   };
 };
 
 Validation.Rules.filter = function(field, params, database, alias, message)
 {
-  return function(value, model, setMessage)
+  return function(value, model, chain)
   {
     if ( isArray( value ) )
     {
@@ -1889,6 +2038,8 @@ Validation.Rules.filter = function(field, params, database, alias, message)
           value.splice( i, 1 );
         }
       }
+
+      chain.update( value );
     }
     else if ( isObject( value ) )
     {
@@ -1899,24 +2050,26 @@ Validation.Rules.filter = function(field, params, database, alias, message)
           delete value[ prop ];
         }
       }
+
+      chain.update( value );
     }
 
-    return value;
+    chain.next();
   };
 };
 
 Validation.Rules.floor = function(field, params, database, alias, message)
 {
-  return function(value, model, setMessage)
+  return function(value, model, chain)
   {
     value = tryParseFloat( value );
-    
+
     if ( isNumber( value ) )
     {
-      value = Math.floor( value );
+      chain.update( Math.floor( value ) );
     }
 
-    return value;
+    chain.next();
   };
 };
 
@@ -1929,49 +2082,79 @@ Validation.Rules.mod = function(field, params, database, alias, message)
     throw '"' + number + '" is not a valid number for the mod rule.';
   }
 
-  return function(value, model, setMessage)
+  return function(value, model, chain)
   {
     value = tryParseFloat( value );
 
     if ( isNumber( value ) )
     {
-      value = value % number;
+      chain.update( value % number );
     }
 
-    return value;
+    chain.next();
   };
 };
 
 Validation.Rules.null = function(field, params, database, alias, message)
 {
-  return function(value, model, setMessage)
+  return function(value, model, chain)
   {
     model.$set( field, null );
 
-    return null;
+    chain.update( null );
+
+    chain.next();
   };
 };
 
 Validation.Rules.round = function(field, params, database, alias, message)
 {
-  return function(value, model, setMessage)
+  return function(value, model, chain)
   {
     value = tryParseFloat( value );
 
     if ( isNumber( value ) )
     {
-      value = Math.round( value );
+      chain.update( Math.round( value ) );
     }
 
-    return value;
+    chain.next();
   };
 };
 
 Validation.Rules.startOfDay = function(field, params, database, alias, message)
 {
-  return function(value, model, setMessage)
+  return function(value, model, chain)
   {
-    return startOfDay( value );
+    chain.update( startOfDay( value ) );
+
+    chain.next();
+  };
+};
+
+Validation.Rules.stripEnts = function(field, params, database, alias, message)
+{
+  return function(value, model, chain)
+  {
+    if ( isString( value ) )
+    {
+      chain.update( value.replace( /&[a-z]+;/gi, '' ) );
+    }
+
+    chain.next();
+  };
+};
+
+Validation.Rules.stripTags = function(field, params, database, alias, message)
+{
+  return function(value, model, chain)
+  {
+    if ( isString( value ) )
+    {
+      chain.update( value.replace( /<(?:.|\n)*?>/gm, '' ) );
+    }
+
+    chain.next();
   };
 };
 
@@ -1995,27 +2178,27 @@ Validation.Rules.trim = function(field, params, database, alias, message)
 
   })();
 
-  return function(value, model, setMessage)
+  return function(value, model, chain)
   {
     if ( isString( value ) )
     {
-      value = trim( value );
+      chain.update( trim( value ) );
     }
 
-    return value;
+    chain.next();
   };
 };
 
 Validation.Rules.unbase64 = function(field, params, database, alias, message)
 {
-  return function(value, model, setMessage)
+  return function(value, model, chain)
   {
     if ( global.atob )
     {
-      value = global.atob( value );
+      chain.update( global.atob( value ) );
     }
 
-    return value;
+    chain.next();
   };
 };
 

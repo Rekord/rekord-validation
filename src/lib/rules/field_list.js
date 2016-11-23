@@ -63,14 +63,16 @@ function fieldListRuleGenerator(ruleName, defaultMessage, isInvalid)
     };
     var map = mapFromArray( matchValues, true );
 
-    return function(value, model, setMessage)
+    return function(value, model, chain)
     {
       if ( isInvalid( value, model, matchField, matchValues, map ) )
       {
-        setMessage( generateMessage( field, getAlias( field ), value, model, messageTemplate, extra ) );
+        chain.invalid( generateMessage( field, getAlias( field ), value, model, messageTemplate, extra ) );
       }
-
-      return value;
+      else
+      {
+        chain.next();
+      }
     };
   };
 

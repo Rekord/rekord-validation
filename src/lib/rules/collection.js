@@ -75,14 +75,16 @@ function collectionRuleGenerator(ruleName, defaultMessage, isInvalid)
       $matchValue: matchValue
     };
 
-    return function(value, model, setMessage)
+    return function(value, model, chain)
     {
       if ( isInvalid( value, model, matchField, matchValue, equality ) )
       {
-        setMessage( generateMessage( field, getAlias( field ), value, model, messageTemplate, extra ) );
+        chain.invalid( generateMessage( field, getAlias( field ), value, model, messageTemplate, extra ) );
       }
-
-      return value;
+      else
+      {
+        chain.next();
+      }
     };
   };
 
@@ -95,7 +97,7 @@ Validation.Rules.validate = function(field, params, database, getAlias, message)
   var messageOption = params || 'message';
   var messageTemplate = determineMessage( 'validate', message );
 
-  return function(value, model, setMessage)
+  return function(value, model, chain)
   {
     if ( isArray( value ) )
     {
@@ -116,19 +118,25 @@ Validation.Rules.validate = function(field, params, database, getAlias, message)
         switch (messageOption)
         {
           case 'models':
-            setMessage( invalid );
+            chain.invalid( invalid );
             break;
           case 'validations':
-            setMessage( invalid.pluck( '$validations', '$$key' ) );
+            chain.invalid( invalid.pluck( '$validations', '$$key' ) );
             break;
           default: // message
-            setMessage( generateMessage( field, getAlias( field ), value, model, messageTemplate ) );
+            chain.invalid( generateMessage( field, getAlias( field ), value, model, messageTemplate ) );
             break;
         }
       }
+      else
+      {
+        chain.next();
+      }
     }
-
-    return value;
+    else
+    {
+      chain.next();
+    }
   };
 };
 

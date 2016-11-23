@@ -1,7 +1,7 @@
 // confirmed:X
 fieldsRuleGenerator('confirmed',
   '{$alias} must match {$fieldAliases}.',
-  function isInvalid(value, model, fields, setValue) {
+  function isInvalid(value, model, fields, chain) {
     var confirmed = true;
 
     for (var i = 0; i < fields.length; i++)
@@ -19,7 +19,7 @@ fieldsRuleGenerator('confirmed',
 // different:X
 fieldsRuleGenerator('different',
   '{$alias} must not match {$fieldAliases}.',
-  function isInvalid(value, model, fields, setValue) {
+  function isInvalid(value, model, fields, chain) {
     var different = false;
 
     for (var i = 0; i < fields.length; i++)
@@ -37,7 +37,7 @@ fieldsRuleGenerator('different',
 // if_valid:X
 fieldsRuleGenerator('if_valid',
   '',
-  function isInvalid(value, model, fields, setValue) {
+  function isInvalid(value, model, fields, chain) {
     var valid = true;
 
     for (var i = 0; i < fields.length && valid; i++)
@@ -50,7 +50,7 @@ fieldsRuleGenerator('if_valid',
 
     if ( !valid )
     {
-      setValue( Validation.Stop );
+      chain.stop();
     }
 
     return false;
@@ -61,7 +61,7 @@ fieldsRuleGenerator('if_valid',
 // required_with:X,Y,...
 fieldsRuleGenerator('required_with',
   '{$alias} is required.',
-  function isInvalid(value, model, fields, setValue) {
+  function isInvalid(value, model, fields, chain) {
     var required = false;
 
     for (var i = 0; i < fields.length && !required; i++)
@@ -80,7 +80,7 @@ fieldsRuleGenerator('required_with',
 // required_with_all:X,Y,...
 fieldsRuleGenerator('required_with_all',
   '{$alias} is required.',
-  function isInvalid(value, model, fields, setValue) {
+  function isInvalid(value, model, fields, chain) {
     var required = true;
 
     for (var i = 0; i < fields.length && required; i++)
@@ -99,7 +99,7 @@ fieldsRuleGenerator('required_with_all',
 // required_without:X,Y,...
 fieldsRuleGenerator('required_without',
   '{$alias} is required.',
-  function isInvalid(value, model, fields, setValue) {
+  function isInvalid(value, model, fields, chain) {
     var required = false;
 
     for (var i = 0; i < fields.length && !required; i++)
@@ -118,7 +118,7 @@ fieldsRuleGenerator('required_without',
 // required_without_all:X,Y,...
 fieldsRuleGenerator('required_without_all',
   '{$alias} is required.',
-  function isInvalid(value, model, fields, setValue) {
+  function isInvalid(value, model, fields, chain) {
     var required = true;
 
     for (var i = 0; i < fields.length && required; i++)
@@ -160,19 +160,16 @@ function fieldsRuleGenerator(ruleName, defaultMessage, isInvalid)
       $fieldAliases: fieldAliases
     };
 
-    return function(value, model, setMessage)
+    return function(value, model, chain)
     {
-      function setValue( newValue )
+      if ( isInvalid( value, model, fields, chain ) )
       {
-        value = newValue;
+        chain.invalid( generateMessage( field, getAlias( field ), value, model, messageTemplate, extra ) );
       }
-
-      if ( isInvalid( value, model, fields, setValue ) )
+      else
       {
-        setMessage( generateMessage( field, getAlias( field ), value, model, messageTemplate, extra ) );
+        chain.next();
       }
-
-      return value;
     };
   };
 

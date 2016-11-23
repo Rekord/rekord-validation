@@ -1,14 +1,14 @@
 Validation.Rules.ceil = function(field, params, database, alias, message)
 {
-  return function(value, model, setMessage)
+  return function(value, model, chain)
   {
     value = tryParseFloat( value );
-    
+
     if ( isNumber( value ) )
     {
-      value = Math.ceil( value );
+      chain.update( Math.ceil( value ) );
     }
 
-    return value;
+    chain.next();
   };
 };

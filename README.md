@@ -14,8 +14,8 @@ rekord-validation adds rules, expressions, transforms, and custom validation fun
 
 The easiest way to install rekord-validation is through bower via `bower install rekord-validation`.
 
-- rekord-validation.js is `45KB` (`7.6KB` gzipped)
-- rekord-validation.min.js is `18KB` (`5.3KB` gzipped)
+- rekord-validation.js is `48KB` (`8.32KB` gzipped)
+- rekord-validation.min.js is `19KB` (`5.69KB` gzipped)
 
 ### Example
 
@@ -34,7 +34,7 @@ var Task = Rekord({
     required: true // the rules must pass to $save model instances
   },
   methods: {
-    $custom: function(value, getAlias, specifiedMessage) {
+    $custom: function(value, getAlias, specifiedMessage, chain) {
       if ( value.length > 140 ) {
         return 'Details can be no larger than 140 characters.'
       }

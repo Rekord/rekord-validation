@@ -1,14 +1,14 @@
 Validation.Rules.round = function(field, params, database, alias, message)
 {
-  return function(value, model, setMessage)
+  return function(value, model, chain)
   {
     value = tryParseFloat( value );
 
     if ( isNumber( value ) )
     {
-      value = Math.round( value );
+      chain.update( Math.round( value ) );
     }
 
-    return value;
+    chain.next();
   };
 };

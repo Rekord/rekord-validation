@@ -58,19 +58,16 @@ function ruleGenerator(ruleName, defaultMessage, isInvalid)
 
     var messageTemplate = determineMessage( ruleName, message );
 
-    return function(value, model, setMessage)
+    return function(value, model, chain)
     {
-      function setValue( newValue )
+      if ( isInvalid( value, model, chain ) )
       {
-        value = newValue;
+        chain.invalid( generateMessage( field, getAlias( field ), value, model, messageTemplate ) );
       }
-
-      if ( isInvalid( value, model, setValue ) )
+      else
       {
-        setMessage( generateMessage( field, getAlias( field ), value, model, messageTemplate ) );
+        chain.next();
       }
-
-      return value;
     };
   };
 

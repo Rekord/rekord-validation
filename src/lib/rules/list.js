@@ -72,14 +72,16 @@ function listRuleGenerator(ruleName, defaultMessage, isInvalid)
       $list: list
     };
 
-    return function(value, model, setMessage)
+    return function(value, model, chain)
     {
       if ( isInvalid( value, model, inList ) )
       {
-        setMessage( generateMessage( field, getAlias( field ), value, model, messageTemplate, extra ) );
+        chain.invalid( generateMessage( field, getAlias( field ), value, model, messageTemplate, extra ) );
       }
-
-      return value;
+      else
+      {
+        chain.next();
+      }
     };
   };
 

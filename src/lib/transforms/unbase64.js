@@ -1,12 +1,12 @@
 Validation.Rules.unbase64 = function(field, params, database, alias, message)
 {
-  return function(value, model, setMessage)
+  return function(value, model, chain)
   {
     if ( global.atob )
     {
-      value = global.atob( value );
+      chain.update( global.atob( value ) );
     }
 
-    return value;
+    chain.next();
   };
 };

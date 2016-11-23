@@ -372,46 +372,56 @@ test( 'rule after missing date', function(assert)
 {
   var prefix = 'rule_after_missing_date_';
 
-  throws(function() {
-    Rekord({
-      name: prefix + 'no_colon',
-      fields: ['due_date'],
-      validation: {
-        rules: {
-          due_date: 'after'
-        }
-      }
-    });
-  }, 'after validation rule requires a date expression argument');
+  expect(2);
 
-  throws(function() {
-    Rekord({
-      name: prefix + 'colon',
-      fields: ['due_date'],
-      validation: {
-        rules: {
-          due_date: 'after:'
-        }
+  Rekord.once( Rekord.Events.Error, function(ex) {
+    strictEqual( ex, 'after validation rule requires a date expression argument' );
+  });
+
+  Rekord({
+    name: prefix + 'no_colon',
+    fields: ['due_date'],
+    validation: {
+      rules: {
+        due_date: 'after'
       }
-    });
-  }, 'after validation rule requires a date expression argument');
+    }
+  });
+
+  Rekord.once( Rekord.Events.Error, function(ex) {
+    strictEqual( ex, 'after validation rule requires a date expression argument' );
+  });
+
+  Rekord({
+    name: prefix + 'colon',
+    fields: ['due_date'],
+    validation: {
+      rules: {
+        due_date: 'after:'
+      }
+    }
+  });
 });
 
 test( 'rule after invalid date', function(assert)
 {
   var prefix = 'rule_after_invalid_date_';
 
-  throws(function() {
-    Rekord({
-      name: prefix,
-      fields: ['due_date'],
-      validation: {
-        rules: {
-          due_date: 'after:NOTDATE'
-        }
+  expect(1);
+
+  Rekord.once( Rekord.Events.Error, function(ex) {
+    strictEqual( ex, 'NOTDATE is not a valid date expression for the after rule' );
+  });
+
+  Rekord({
+    name: prefix,
+    fields: ['due_date'],
+    validation: {
+      rules: {
+        due_date: 'after:NOTDATE'
       }
-    });
-  }, 'NOTDATE is not a valid date expression for the after rule');
+    }
+  });
 });
 
 test( 'rule after_on custom message', function(assert)
@@ -604,46 +614,56 @@ test( 'rule after_on missing date', function(assert)
 {
   var prefix = 'rule_after_on_missing_date_';
 
-  throws(function() {
-    Rekord({
-      name: prefix + 'no_colon',
-      fields: ['due_date'],
-      validation: {
-        rules: {
-          due_date: 'after_on'
-        }
-      }
-    });
-  }, 'after_on validation rule requires a date expression argument');
+  expect(2);
 
-  throws(function() {
-    Rekord({
-      name: prefix + 'colon',
-      fields: ['due_date'],
-      validation: {
-        rules: {
-          due_date: 'after_on:'
-        }
+  Rekord.once( Rekord.Events.Error, function(ex) {
+    strictEqual( ex, 'after_on validation rule requires a date expression argument' );
+  });
+
+  Rekord({
+    name: prefix + 'no_colon',
+    fields: ['due_date'],
+    validation: {
+      rules: {
+        due_date: 'after_on'
       }
-    });
-  }, 'after_on validation rule requires a date expression argument');
+    }
+  });
+
+  Rekord.once( Rekord.Events.Error, function(ex) {
+    strictEqual( ex, 'after_on validation rule requires a date expression argument' );
+  });
+
+  Rekord({
+    name: prefix + 'colon',
+    fields: ['due_date'],
+    validation: {
+      rules: {
+        due_date: 'after_on:'
+      }
+    }
+  });
 });
 
 test( 'rule after_on invalid date', function(assert)
 {
   var prefix = 'rule_after_on_invalid_date_';
 
-  throws(function() {
-    Rekord({
-      name: prefix,
-      fields: ['due_date'],
-      validation: {
-        rules: {
-          due_date: 'after_on:NOTDATE'
-        }
+  expect(1);
+
+  Rekord.once( Rekord.Events.Error, function(ex) {
+    strictEqual( ex, 'NOTDATE is not a valid date expression for the after_on rule' );
+  });
+
+  Rekord({
+    name: prefix,
+    fields: ['due_date'],
+    validation: {
+      rules: {
+        due_date: 'after_on:NOTDATE'
       }
-    });
-  }, 'NOTDATE is not a valid date expression for the after_on rule');
+    }
+  });
 });
 
 test( 'rule before custom message', function(assert)
@@ -836,46 +856,56 @@ test( 'rule before missing date', function(assert)
 {
   var prefix = 'rule_before_missing_date_';
 
-  throws(function() {
-    Rekord({
-      name: prefix + 'no_colon',
-      fields: ['due_date'],
-      validation: {
-        rules: {
-          due_date: 'before'
-        }
-      }
-    });
-  }, 'before validation rule requires a date expression argument');
+  expect(2);
 
-  throws(function() {
-    Rekord({
-      name: prefix + 'colon',
-      fields: ['due_date'],
-      validation: {
-        rules: {
-          due_date: 'before:'
-        }
+  Rekord.once( Rekord.Events.Error, function(ex) {
+    strictEqual( ex, 'before validation rule requires a date expression argument' );
+  });
+
+  Rekord({
+    name: prefix + 'no_colon',
+    fields: ['due_date'],
+    validation: {
+      rules: {
+        due_date: 'before'
       }
-    });
-  }, 'before validation rule requires a date expression argument');
+    }
+  });
+
+  Rekord.once( Rekord.Events.Error, function(ex) {
+    strictEqual( ex, 'before validation rule requires a date expression argument' );
+  });
+
+  Rekord({
+    name: prefix + 'colon',
+    fields: ['due_date'],
+    validation: {
+      rules: {
+        due_date: 'before:'
+      }
+    }
+  });
 });
 
 test( 'rule before invalid date', function(assert)
 {
   var prefix = 'rule_before_invalid_date_';
 
-  throws(function() {
-    Rekord({
-      name: prefix,
-      fields: ['due_date'],
-      validation: {
-        rules: {
-          due_date: 'before:NOTDATE'
-        }
+  expect(1);
+
+  Rekord.once( Rekord.Events.Error, function(ex) {
+    strictEqual( ex, 'NOTDATE is not a valid date expression for the before rule' );
+  });
+
+  Rekord({
+    name: prefix,
+    fields: ['due_date'],
+    validation: {
+      rules: {
+        due_date: 'before:NOTDATE'
       }
-    });
-  }, 'NOTDATE is not a valid date expression for the before rule');
+    }
+  });
 });
 
 test( 'rule before_on custom message', function(assert)
@@ -1068,46 +1098,56 @@ test( 'rule before_on missing date', function(assert)
 {
   var prefix = 'rule_before_on_missing_date_';
 
-  throws(function() {
-    Rekord({
-      name: prefix + 'no_colon',
-      fields: ['due_date'],
-      validation: {
-        rules: {
-          due_date: 'before_on'
-        }
-      }
-    });
-  }, 'before_on validation rule requires a date expression argument');
+  expect(2);
 
-  throws(function() {
-    Rekord({
-      name: prefix + 'colon',
-      fields: ['due_date'],
-      validation: {
-        rules: {
-          due_date: 'before_on:'
-        }
+  Rekord.once( Rekord.Events.Error, function(ex) {
+    strictEqual( ex, 'before_on validation rule requires a date expression argument' );
+  });
+
+  Rekord({
+    name: prefix + 'no_colon',
+    fields: ['due_date'],
+    validation: {
+      rules: {
+        due_date: 'before_on'
       }
-    });
-  }, 'before_on validation rule requires a date expression argument');
+    }
+  });
+
+  Rekord.once( Rekord.Events.Error, function(ex) {
+    strictEqual( ex, 'before_on validation rule requires a date expression argument' );
+  });
+
+  Rekord({
+    name: prefix + 'colon',
+    fields: ['due_date'],
+    validation: {
+      rules: {
+        due_date: 'before_on:'
+      }
+    }
+  });
 });
 
 test( 'rule before_on invalid date', function(assert)
 {
   var prefix = 'rule_before_on_invalid_date_';
 
-  throws(function() {
-    Rekord({
-      name: prefix,
-      fields: ['due_date'],
-      validation: {
-        rules: {
-          due_date: 'before_on:NOTDATE'
-        }
+  expect(1);
+
+  Rekord.once( Rekord.Events.Error, function(ex) {
+    strictEqual( ex, 'NOTDATE is not a valid date expression for the before_on rule' );
+  });
+
+  Rekord({
+    name: prefix,
+    fields: ['due_date'],
+    validation: {
+      rules: {
+        due_date: 'before_on:NOTDATE'
       }
-    });
-  }, 'NOTDATE is not a valid date expression for the before_on rule');
+    }
+  });
 });
 
 test( 'rule required custom message', function(assert)
@@ -1376,41 +1416,49 @@ test( 'rule min invalid arguments', function(assert)
 {
   var prefix = 'rule_min_invalid_arguments_';
 
-  throws(function() {
-    Rekord({
-      name: prefix + 'no_colon',
-      fields: ['count'],
-      validation: {
-        rules: {
-          count: 'min'
-        }
-      }
-    });
-  }, 'min validation rule requires a number argument');
+  expect(3);
 
-  throws(function() {
-    Rekord({
-      name: prefix + 'colon',
-      fields: ['count'],
-      validation: {
-        rules: {
-          count: 'min:'
-        }
-      }
-    });
-  }, 'min validation rule requires a number argument');
+  Rekord.once( Rekord.Events.Error, function(ex) {
+    strictEqual( ex, '"undefined" is not a valid number for the min rule' );
+  });
 
-  throws(function() {
-    Rekord({
-      name: prefix + 'nan',
-      fields: ['count'],
-      validation: {
-        rules: {
-          count: 'min:X'
-        }
+  Rekord({
+    name: prefix + 'no_colon',
+    fields: ['count'],
+    validation: {
+      rules: {
+        count: 'min'
       }
-    });
-  }, 'X is not a valid number for the min rule');
+    }
+  });
+
+  Rekord.once( Rekord.Events.Error, function(ex) {
+    strictEqual( ex, '"" is not a valid number for the min rule' );
+  });
+
+  Rekord({
+    name: prefix + 'colon',
+    fields: ['count'],
+    validation: {
+      rules: {
+        count: 'min:'
+      }
+    }
+  });
+
+  Rekord.once( Rekord.Events.Error, function(ex) {
+    strictEqual( ex, '"X" is not a valid number for the min rule' );
+  });
+
+  Rekord({
+    name: prefix + 'nan',
+    fields: ['count'],
+    validation: {
+      rules: {
+        count: 'min:X'
+      }
+    }
+  });
 });
 
 // rule min custom message
@@ -1514,41 +1562,49 @@ test( 'rule greater_than invalid arguments', function(assert)
 {
   var prefix = 'rule_greater_than_invalid_arguments_';
 
-  throws(function() {
-    Rekord({
-      name: prefix + 'no_colon',
-      fields: ['count'],
-      validation: {
-        rules: {
-          count: 'greater_than'
-        }
-      }
-    });
-  }, 'greater_than validation rule requires a number argument');
+  expect(3);
 
-  throws(function() {
-    Rekord({
-      name: prefix + 'colon',
-      fields: ['count'],
-      validation: {
-        rules: {
-          count: 'greater_than:'
-        }
-      }
-    });
-  }, 'greater_than validation rule requires a number argument');
+  Rekord.once( Rekord.Events.Error, function(ex) {
+    strictEqual( ex, '"undefined" is not a valid number for the greater_than rule' );
+  });
 
-  throws(function() {
-    Rekord({
-      name: prefix + 'nan',
-      fields: ['count'],
-      validation: {
-        rules: {
-          count: 'greater_than:X'
-        }
+  Rekord({
+    name: prefix + 'no_colon',
+    fields: ['count'],
+    validation: {
+      rules: {
+        count: 'greater_than'
       }
-    });
-  }, 'X is not a valid number for the greater_than rule');
+    }
+  });
+
+  Rekord.once( Rekord.Events.Error, function(ex) {
+    strictEqual( ex, '"" is not a valid number for the greater_than rule' );
+  });
+
+  Rekord({
+    name: prefix + 'colon',
+    fields: ['count'],
+    validation: {
+      rules: {
+        count: 'greater_than:'
+      }
+    }
+  });
+
+  Rekord.once( Rekord.Events.Error, function(ex) {
+    strictEqual( ex, '"X" is not a valid number for the greater_than rule' );
+  });
+
+  Rekord({
+    name: prefix + 'nan',
+    fields: ['count'],
+    validation: {
+      rules: {
+        count: 'greater_than:X'
+      }
+    }
+  });
 });
 
 // rule greater_than custom message
@@ -1653,41 +1709,49 @@ test( 'rule max invalid arguments', function(assert)
 {
   var prefix = 'rule_max_invalid_arguments_';
 
-  throws(function() {
-    Rekord({
-      name: prefix + 'no_colon',
-      fields: ['count'],
-      validation: {
-        rules: {
-          count: 'max'
-        }
-      }
-    });
-  }, 'max validation rule requires a number argument');
+  expect(3);
 
-  throws(function() {
-    Rekord({
-      name: prefix + 'colon',
-      fields: ['count'],
-      validation: {
-        rules: {
-          count: 'max:'
-        }
-      }
-    });
-  }, 'max validation rule requires a number argument');
+  Rekord.once( Rekord.Events.Error, function(ex) {
+    strictEqual( ex, '"undefined" is not a valid number for the max rule' );
+  });
 
-  throws(function() {
-    Rekord({
-      name: prefix + 'nan',
-      fields: ['count'],
-      validation: {
-        rules: {
-          count: 'max:X'
-        }
+  Rekord({
+    name: prefix + 'no_colon',
+    fields: ['count'],
+    validation: {
+      rules: {
+        count: 'max'
       }
-    });
-  }, 'X is not a valid number for the max rule');
+    }
+  });
+
+  Rekord.once( Rekord.Events.Error, function(ex) {
+    strictEqual( ex, '"" is not a valid number for the max rule' );
+  });
+
+  Rekord({
+    name: prefix + 'colon',
+    fields: ['count'],
+    validation: {
+      rules: {
+        count: 'max:'
+      }
+    }
+  });
+
+  Rekord.once( Rekord.Events.Error, function(ex) {
+    strictEqual( ex, '"X" is not a valid number for the max rule' );
+  });
+
+  Rekord({
+    name: prefix + 'nan',
+    fields: ['count'],
+    validation: {
+      rules: {
+        count: 'max:X'
+      }
+    }
+  });
 });
 
 // rule max custom message
@@ -1792,41 +1856,49 @@ test( 'rule less_than invalid arguments', function(assert)
 {
   var prefix = 'rule_less_than_invalid_arguments_';
 
-  throws(function() {
-    Rekord({
-      name: prefix + 'no_colon',
-      fields: ['count'],
-      validation: {
-        rules: {
-          count: 'less_than'
-        }
-      }
-    });
-  }, 'less_than validation rule requires a number argument');
+  expect(3);
 
-  throws(function() {
-    Rekord({
-      name: prefix + 'colon',
-      fields: ['count'],
-      validation: {
-        rules: {
-          count: 'less_than:'
-        }
-      }
-    });
-  }, 'less_than validation rule requires a number argument');
+  Rekord.once( Rekord.Events.Error, function(ex) {
+    strictEqual( ex, '"undefined" is not a valid number for the less_than rule' );
+  });
 
-  throws(function() {
-    Rekord({
-      name: prefix + 'nan',
-      fields: ['count'],
-      validation: {
-        rules: {
-          count: 'less_than:X'
-        }
+  Rekord({
+    name: prefix + 'no_colon',
+    fields: ['count'],
+    validation: {
+      rules: {
+        count: 'less_than'
       }
-    });
-  }, 'X is not a valid number for the less_than rule');
+    }
+  });
+
+  Rekord.once( Rekord.Events.Error, function(ex) {
+    strictEqual( ex, '"" is not a valid number for the less_than rule' );
+  });
+
+  Rekord({
+    name: prefix + 'colon',
+    fields: ['count'],
+    validation: {
+      rules: {
+        count: 'less_than:'
+      }
+    }
+  });
+
+  Rekord.once( Rekord.Events.Error, function(ex) {
+    strictEqual( ex, '"X" is not a valid number for the less_than rule' );
+  });
+
+  Rekord({
+    name: prefix + 'nan',
+    fields: ['count'],
+    validation: {
+      rules: {
+        count: 'less_than:X'
+      }
+    }
+  });
 });
 
 // rule less_than custom message
@@ -1931,41 +2003,49 @@ test( 'rule equal invalid arguments', function(assert)
 {
   var prefix = 'rule_equal_invalid_arguments_';
 
-  throws(function() {
-    Rekord({
-      name: prefix + 'no_colon',
-      fields: ['count'],
-      validation: {
-        rules: {
-          count: 'equal'
-        }
-      }
-    });
-  }, 'equal validation rule requires a number argument');
+  expect(3);
 
-  throws(function() {
-    Rekord({
-      name: prefix + 'colon',
-      fields: ['count'],
-      validation: {
-        rules: {
-          count: 'equal:'
-        }
-      }
-    });
-  }, 'equal validation rule requires a number argument');
+  Rekord.once( Rekord.Events.Error, function(ex) {
+    strictEqual( ex, '"undefined" is not a valid number for the equal rule' );
+  });
 
-  throws(function() {
-    Rekord({
-      name: prefix + 'nan',
-      fields: ['count'],
-      validation: {
-        rules: {
-          count: 'equal:X'
-        }
+  Rekord({
+    name: prefix + 'no_colon',
+    fields: ['count'],
+    validation: {
+      rules: {
+        count: 'equal'
       }
-    });
-  }, 'X is not a valid number for the equal rule');
+    }
+  });
+
+  Rekord.once( Rekord.Events.Error, function(ex) {
+    strictEqual( ex, '"" is not a valid number for the equal rule' );
+  });
+
+  Rekord({
+    name: prefix + 'colon',
+    fields: ['count'],
+    validation: {
+      rules: {
+        count: 'equal:'
+      }
+    }
+  });
+
+  Rekord.once( Rekord.Events.Error, function(ex) {
+    strictEqual( ex, '"X" is not a valid number for the equal rule' );
+  });
+
+  Rekord({
+    name: prefix + 'nan',
+    fields: ['count'],
+    validation: {
+      rules: {
+        count: 'equal:X'
+      }
+    }
+  });
 });
 
 // rule equal custom message
@@ -2070,41 +2150,49 @@ test( 'rule not_equal invalid arguments', function(assert)
 {
   var prefix = 'rule_not_equal_invalid_arguments_';
 
-  throws(function() {
-    Rekord({
-      name: prefix + 'no_colon',
-      fields: ['count'],
-      validation: {
-        rules: {
-          count: 'not_equal'
-        }
-      }
-    });
-  }, 'not_equal validation rule requires a number argument');
+  expect(3);
 
-  throws(function() {
-    Rekord({
-      name: prefix + 'colon',
-      fields: ['count'],
-      validation: {
-        rules: {
-          count: 'not_equal:'
-        }
-      }
-    });
-  }, 'not_equal validation rule requires a number argument');
+  Rekord.once( Rekord.Events.Error, function(ex) {
+    strictEqual( ex, '"undefined" is not a valid number for the not_equal rule' );
+  });
 
-  throws(function() {
-    Rekord({
-      name: prefix + 'nan',
-      fields: ['count'],
-      validation: {
-        rules: {
-          count: 'not_equal:X'
-        }
+  Rekord({
+    name: prefix + 'no_colon',
+    fields: ['count'],
+    validation: {
+      rules: {
+        count: 'not_equal'
       }
-    });
-  }, 'X is not a valid number for the not_equal rule');
+    }
+  });
+
+  Rekord.once( Rekord.Events.Error, function(ex) {
+    strictEqual( ex, '"" is not a valid number for the not_equal rule' );
+  });
+
+  Rekord({
+    name: prefix + 'colon',
+    fields: ['count'],
+    validation: {
+      rules: {
+        count: 'not_equal:'
+      }
+    }
+  });
+
+  Rekord.once( Rekord.Events.Error, function(ex) {
+    strictEqual( ex, '"X" is not a valid number for the not_equal rule' );
+  });
+
+  Rekord({
+    name: prefix + 'nan',
+    fields: ['count'],
+    validation: {
+      rules: {
+        count: 'not_equal:X'
+      }
+    }
+  });
 });
 
 // rule not_equal custom message
@@ -2664,65 +2752,77 @@ test( 'rule between invalid arguments', function(assert)
 {
   var prefix = 'rule_between_invalid_arguments_';
 
-  throws(function() {
-    Rekord({
-      name: prefix + 'no_colon',
-      fields: ['count'],
-      validation: {
-        rules: {
-          count: 'between'
-        }
-      }
-    });
-  }, 'between validation rule requires a range argument');
+  expect(5);
 
-  throws(function() {
-    Rekord({
-      name: prefix + 'colon',
-      fields: ['count'],
-      validation: {
-        rules: {
-          count: 'between:'
-        }
-      }
-    });
-  }, 'between validation rule requires a range argument');
+  Rekord.once( Rekord.Events.Error, function(ex) {
+    strictEqual( ex, 'between validation rule requires a range argument' );
+  });
 
-  throws(function() {
-    Rekord({
-      name: prefix + 'nan,',
-      fields: ['count'],
-      validation: {
-        rules: {
-          count: 'between:X'
-        }
+  Rekord({
+    name: prefix + 'no_colon',
+    fields: ['count'],
+    validation: {
+      rules: {
+        count: 'between'
       }
-    });
-  }, 'X is not a valid range of numbers for the between rule');
+    }
+  });
 
-  throws(function() {
-    Rekord({
-      name: prefix + 'nan,num',
-      fields: ['count'],
-      validation: {
-        rules: {
-          count: 'between:X,3'
-        }
-      }
-    });
-  }, 'X,3 is not a valid range of numbers for the between rule');
+  Rekord.once( Rekord.Events.Error, function(ex) {
+    strictEqual( ex, 'between validation rule requires a range argument' );
+  });
 
-  throws(function() {
-    Rekord({
-      name: prefix + 'num,nan',
-      fields: ['count'],
-      validation: {
-        rules: {
-          count: 'between:4,'
-        }
+  Rekord({
+    name: prefix + 'colon',
+    fields: ['count'],
+    validation: {
+      rules: {
+        count: 'between:'
       }
-    });
-  }, '4, is not a valid range of numbers for the between rule');
+    }
+  });
+
+  Rekord.once( Rekord.Events.Error, function(ex) {
+    strictEqual( ex, 'X is not a valid range of numbers for the between rule' );
+  });
+
+  Rekord({
+    name: prefix + 'nan_',
+    fields: ['count'],
+    validation: {
+      rules: {
+        count: 'between:X'
+      }
+    }
+  });
+
+  Rekord.once( Rekord.Events.Error, function(ex) {
+    strictEqual( ex, 'X,3 is not a valid range of numbers for the between rule' );
+  });
+
+  Rekord({
+    name: prefix + 'nan_num',
+    fields: ['count'],
+    validation: {
+      rules: {
+        count: 'between:X,3'
+      }
+    }
+  });
+
+  Rekord.once( Rekord.Events.Error, function(ex) {
+    strictEqual( ex, '4, is not a valid range of numbers for the between rule' );
+  });
+
+  Rekord({
+    name: prefix + 'num_nan',
+    fields: ['count'],
+    validation: {
+      rules: {
+        count: 'between:4,'
+      }
+    }
+  });
 });
 
 // rule between custom message
@@ -2962,65 +3062,77 @@ test( 'rule not_between invalid arguments', function(assert)
 {
   var prefix = 'rule_not_between_invalid_arguments_';
 
-  throws(function() {
-    Rekord({
-      name: prefix + 'no_colon',
-      fields: ['count'],
-      validation: {
-        rules: {
-          count: 'not_between'
-        }
-      }
-    });
-  }, 'not_between validation rule requires a range argument');
+  expect(5);
 
-  throws(function() {
-    Rekord({
-      name: prefix + 'colon',
-      fields: ['count'],
-      validation: {
-        rules: {
-          count: 'not_between:'
-        }
-      }
-    });
-  }, 'not_between validation rule requires a range argument');
+  Rekord.once( Rekord.Events.Error, function(ex) {
+    strictEqual( ex, 'not_between validation rule requires a range argument' );
+  });
 
-  throws(function() {
-    Rekord({
-      name: prefix + 'nan,',
-      fields: ['count'],
-      validation: {
-        rules: {
-          count: 'not_between:X'
-        }
+  Rekord({
+    name: prefix + 'no_colon',
+    fields: ['count'],
+    validation: {
+      rules: {
+        count: 'not_between'
       }
-    });
-  }, 'X is not a valid range of numbers for the not_between rule');
+    }
+  });
 
-  throws(function() {
-    Rekord({
-      name: prefix + 'nan,num',
-      fields: ['count'],
-      validation: {
-        rules: {
-          count: 'not_between:X,3'
-        }
-      }
-    });
-  }, 'X,3 is not a valid range of numbers for the not_between rule');
+  Rekord.once( Rekord.Events.Error, function(ex) {
+    strictEqual( ex, 'not_between validation rule requires a range argument' );
+  });
 
-  throws(function() {
-    Rekord({
-      name: prefix + 'num,nan',
-      fields: ['count'],
-      validation: {
-        rules: {
-          count: 'not_between:4,'
-        }
+  Rekord({
+    name: prefix + 'colon',
+    fields: ['count'],
+    validation: {
+      rules: {
+        count: 'not_between:'
       }
-    });
-  }, '4, is not a valid range of numbers for the not_between rule');
+    }
+  });
+
+  Rekord.once( Rekord.Events.Error, function(ex) {
+    strictEqual( ex, 'X is not a valid range of numbers for the not_between rule' );
+  });
+
+  Rekord({
+    name: prefix + 'nan_',
+    fields: ['count'],
+    validation: {
+      rules: {
+        count: 'not_between:X'
+      }
+    }
+  });
+
+  Rekord.once( Rekord.Events.Error, function(ex) {
+    strictEqual( ex, 'X,3 is not a valid range of numbers for the not_between rule' );
+  });
+
+  Rekord({
+    name: prefix + 'nan_num',
+    fields: ['count'],
+    validation: {
+      rules: {
+        count: 'not_between:X,3'
+      }
+    }
+  });
+
+  Rekord.once( Rekord.Events.Error, function(ex) {
+    strictEqual( ex, '4, is not a valid range of numbers for the not_between rule' );
+  });
+
+  Rekord({
+    name: prefix + 'num_nan',
+    fields: ['count'],
+    validation: {
+      rules: {
+        count: 'not_between:4,'
+      }
+    }
+  });
 });
 
 // rule not_between custom message
@@ -6761,5 +6873,211 @@ test( 'transform null', function(assert)
   strictEqual( a.value, null );
 });
 
+test( 'async validation valid', function(assert)
+{
+  var done = assert.async();
+  var prefix = 'async_validation_valid_';
 
-// transform null
+  var Task = Rekord({
+    name: prefix + 'task',
+    fields: ['value'],
+    validation: {
+      rules: {
+        value: '$isValid'
+      }
+    },
+    methods: {
+      $isValid: function(value, getAlias, message, chain) {
+        setTimeout(function() {
+          ok(true);
+          chain.next();
+        }, 10);
+        return false; // we'll handle calling next/invalid ourself
+      }
+    }
+  });
+
+  expect(3);
+
+  var a = Task.create({value: 'notnull'});
+
+  ok( a.$validate(function(valid) {
+    ok( valid );
+    done();
+  }));
+});
+
+test( 'async validation invalid', function(assert)
+{
+  var done = assert.async();
+  var prefix = 'async_validation_invalid_';
+
+  var Task = Rekord({
+    name: prefix + 'task',
+    fields: ['value'],
+    validation: {
+      rules: {
+        value: '$isValid'
+      }
+    },
+    methods: {
+      $isValid: function(value, getAlias, message, chain) {
+        setTimeout(function() {
+          ok(true);
+          chain.invalid('NOPE');
+        }, 10);
+        return false; // we'll handle calling next/invalid ourself
+      }
+    }
+  });
+
+  expect(4);
+
+  var a = Task.create({value: 'notnull'});
+
+  ok( a.$validate(function(valid) {
+    notOk( valid );
+    strictEqual( a.$validations.value, 'NOPE' );
+    done();
+  }));
+});
+
+test( 'async validation save', function(assert)
+{
+  var done = assert.async();
+  var prefix = 'async_validation_save_';
+
+  var Task = Rekord({
+    name: prefix + 'task',
+    fields: ['value'],
+    validation: {
+      required: true,
+      rules: {
+        value: '$isValid'
+      }
+    },
+    methods: {
+      $isValid: function(value, getAlias, message, chain) {
+        setTimeout(function() {
+          chain.next();
+        }, 10);
+        return false; // we'll handle calling next/invalid ourself
+      }
+    }
+  });
+
+  expect(3);
+
+  var t0 = new Task({value: 'meow'});
+
+  var p0 = t0.$save();
+
+  ok( p0.isPending() );
+
+  p0.success(function()
+  {
+    ok( t0.$isSaved() );
+    strictEqual( t0.$saved.value, 'meow' );
+    done();
+  });
+});
+
+test( 'async validation save fail', function(assert)
+{
+  var done = assert.async();
+  var prefix = 'async_validation_save_fail_';
+
+  var Task = Rekord({
+    name: prefix + 'task',
+    fields: ['value'],
+    validation: {
+      required: true,
+      rules: {
+        value: '$isValid'
+      }
+    },
+    methods: {
+      $isValid: function(value, getAlias, message, chain) {
+        setTimeout(function() {
+          chain.invalid();
+        }, 10);
+        return false; // we'll handle calling next/invalid ourself
+      }
+    }
+  });
+
+  expect(3);
+
+  var t0 = new Task({value: 'meow'});
+
+  var p0 = t0.$save();
+
+  ok( p0.isPending() );
+
+  p0.failure(function()
+  {
+    notOk( t0.$isSaved() );
+    notOk( t0.$valid );
+    done();
+  });
+});
+
+test( 'stripTags', function(assert)
+{
+  var prefix = 'stripTags_';
+
+  var Task = Rekord({
+    name: prefix + 'task',
+    fields: ['value'],
+    validation: {
+      required: true,
+      rules: {
+        value: 'stripTags|apply'
+      }
+    }
+  });
+
+  var t0 = Task.create({value: '<a href="http://google.com">Hello World!</a>'});
+
+  strictEqual( t0.value, 'Hello World!' );
+
+  var t1 = Task.create({value: '> Meow!'});
+
+  strictEqual( t1.value, '> Meow!' );
+
+  var t2 = Task.create({value: ' <a href="alert(\'Meow !\')">yo</a> <br><br>'});
+
+  strictEqual( t2.value, ' yo ' );
+
+  var t3 = Task.create({value: '<br><br>'});
+
+  strictEqual( t3.value, '' );
+
+  var t4 = Task.create({value: '<!-- Comment! -->yerp'});
+
+  strictEqual( t4.value, 'yerp' );
+});
+
+test( 'stripEnts', function(assert)
+{
+  var prefix = 'stripEnts_';
+
+  var Task = Rekord({
+    name: prefix + 'task',
+    fields: ['value'],
+    validation: {
+      required: true,
+      rules: {
+        value: 'stripEnts|apply'
+      }
+    }
+  });
+
+  var t0 = Task.create({value: 'Hello World!&gt;'});
+
+  strictEqual( t0.value, 'Hello World!' );
+
+  var t1 = Task.create({value: 'Meow! &nbsp;'});
+
+  strictEqual( t1.value, 'Meow! ' );
+});

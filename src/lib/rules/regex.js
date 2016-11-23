@@ -43,11 +43,15 @@ function regexRuleGenerator(ruleName, defaultMessage, regex)
 
     var messageTemplate = determineMessage( ruleName, message );
 
-    return function(value, model, setMessage)
+    return function(value, model, chain)
     {
       if ( !regex.test( value ) )
       {
-        setMessage( generateMessage( field, getAlias( field ), value, model, messageTemplate ) );
+        chain.invalid( generateMessage( field, getAlias( field ), value, model, messageTemplate ) );
+      }
+      else
+      {
+        chain.next();
       }
 
       return value;
@@ -82,14 +86,16 @@ Validation.Rules.regex = function(field, params, database, getAlias, message)
 
   var messageTemplate = determineMessage( 'regex', message );
 
-  return function(value, model, setMessage)
+  return function(value, model, chain)
   {
     if ( !regex.test( value ) )
     {
-      setMessage( generateMessage( field, getAlias( field ), value, model, messageTemplate ) );
+      chain.invalid( generateMessage( field, getAlias( field ), value, model, messageTemplate ) );
     }
-
-    return value;
+    else
+    {
+      chain.next();
+    }
   };
 };
 

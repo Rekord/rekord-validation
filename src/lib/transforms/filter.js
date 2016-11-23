@@ -1,6 +1,6 @@
 Validation.Rules.filter = function(field, params, database, alias, message)
 {
-  return function(value, model, setMessage)
+  return function(value, model, chain)
   {
     if ( isArray( value ) )
     {
@@ -11,6 +11,8 @@ Validation.Rules.filter = function(field, params, database, alias, message)
           value.splice( i, 1 );
         }
       }
+
+      chain.update( value );
     }
     else if ( isObject( value ) )
     {
@@ -21,8 +23,10 @@ Validation.Rules.filter = function(field, params, database, alias, message)
           delete value[ prop ];
         }
       }
+
+      chain.update( value );
     }
 
-    return value;
+    chain.next();
   };
 };

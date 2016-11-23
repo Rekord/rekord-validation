@@ -43,14 +43,14 @@ ruleGenerator('model',
 
 ruleGenerator('whole',
   '{$alias} must be a whole number.',
-  function isInvalid(value, model, setValue) {
+  function isInvalid(value, model, chain) {
     var parsed = tryParseInt( value );
     var numeric = parseFloat( value );
     var invalid = !isNumber( parsed );
     if ( !invalid ) {
       invalid = Math.floor( parsed ) !== numeric;
       if ( !invalid ) {
-        setValue( parsed );
+        chain.update( parsed );
       }
     }
     return invalid;
@@ -59,11 +59,11 @@ ruleGenerator('whole',
 
 ruleGenerator('numeric',
   '{$alias} must be numeric.',
-  function isInvalid(value, model, setValue) {
+  function isInvalid(value, model, chain) {
     var parsed = tryParseFloat( value );
     var invalid = !isNumber( parsed );
     if ( !invalid ) {
-      setValue( parsed );
+      chain.update( parsed );
     }
     return invalid;
   }
@@ -71,11 +71,11 @@ ruleGenerator('numeric',
 
 ruleGenerator('yesno',
   '{$alias} must be a yes or no.',
-  function isInvalid(value, model, setValue) {
+  function isInvalid(value, model, chain) {
     var mapped = Validation.Rules.yesno.map[ value ];
     var invalid = !isBoolean( mapped );
     if ( !invalid ) {
-      setValue( mapped );
+      chain.update( mapped );
     }
     return invalid;
   }

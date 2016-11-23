@@ -1,12 +1,12 @@
 Validation.Rules.base64 = function(field, params, database, alias, message)
 {
-  return function(value, model, setMessage)
+  return function(value, model, chain)
   {
     if ( global.btoa )
     {
-      value = global.btoa( value );
+      chain.update( global.btoa( value ) );
     }
 
-    return value;
+    chain.next();
   };
 };

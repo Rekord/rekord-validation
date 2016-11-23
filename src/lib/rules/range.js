@@ -69,7 +69,7 @@ function rangeRuleGenerator(ruleName, defaultMessages, isInvalid)
       $end: end
     };
 
-    return function(value, model, setMessage)
+    return function(value, model, chain)
     {
       var size = sizeof( value );
       var type = typeof( value );
@@ -79,10 +79,12 @@ function rangeRuleGenerator(ruleName, defaultMessages, isInvalid)
       {
         extra.$size = size;
 
-        setMessage( generateMessage( field, getAlias( field ), value, model, typeMessage, extra ) );
+        chain.invalid( generateMessage( field, getAlias( field ), value, model, typeMessage, extra ) );
       }
-
-      return value;
+      else
+      {
+        chain.next();
+      }
     };
   };
 

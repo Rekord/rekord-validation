@@ -1,14 +1,14 @@
 Validation.Rules.floor = function(field, params, database, alias, message)
 {
-  return function(value, model, setMessage)
+  return function(value, model, chain)
   {
     value = tryParseFloat( value );
-    
+
     if ( isNumber( value ) )
     {
-      value = Math.floor( value );
+      chain.update( Math.floor( value ) );
     }
 
-    return value;
+    chain.next();
   };
 };

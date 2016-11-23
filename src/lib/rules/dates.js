@@ -33,11 +33,11 @@ dateRuleGenerator('before_on',
 // date
 ruleGenerator('date_like',
   '{$alias} must be a valid date.',
-  function isInvalid(value, model, setValue) {
+  function isInvalid(value, model, chain) {
     var parsed = parseDate( value );
     var invalid = parsed === false;
     if ( !invalid ) {
-      setValue( parsed.getTime() );
+      chain.update( parsed.getTime() );
     }
     return invalid;
   }
@@ -87,7 +87,7 @@ function dateRuleGenerator(ruleName, defaultMessage, isInvalid)
       $date: params
     };
 
-    return function(value, model, setMessage)
+    return function(value, model, chain)
     {
       var parsed = parseDate( value );
 
@@ -99,11 +99,17 @@ function dateRuleGenerator(ruleName, defaultMessage, isInvalid)
 
         if ( isNumber( date ) && isInvalid( value, date ) )
         {
-          setMessage( generateMessage( field, getAlias( field ), value, model, messageTemplate, extra ) );
+          chain.invalid( generateMessage( field, getAlias( field ), value, model, messageTemplate, extra ) );
+        }
+        else
+        {
+          chain.next();
         }
       }
-
-      return value;
+      else
+      {
+        chain.next();
+      }
     };
   };
 

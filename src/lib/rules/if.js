@@ -69,15 +69,28 @@ function subRuleGenerator(ruleName, isInvalid)
 
     var validators = Validation.parseRules( otherRules, otherField, database, getAlias );
 
-    return function(value, model, setMessage)
+    return function(value, model, chain)
     {
       var invalids = 0;
+      var chainCount = 0;
 
-      var setInvalid = function(message)
+      var onChainEnd = function(innerChain)
       {
-        if ( message )
+        if (!innerChain.valid)
         {
           invalids++;
+        }
+
+        if (++chainCount === validators.length)
+        {
+          if ( isInvalid( invalids, chainCount ) )
+          {
+            chain.stop();
+          }
+          else
+          {
+            chain.next();
+          }
         }
       };
 
@@ -85,10 +98,10 @@ function subRuleGenerator(ruleName, isInvalid)
 
       for (var i = 0; i < validators.length; i++)
       {
-        validators[ i ]( testValue, model, setInvalid );
-      }
+        var innerChain = new ValidationChain( model, otherField, [validators[ i ]], onChainEnd );
 
-      return isInvalid( invalids, validators.length ) ? Validation.Stop : value;
+        innerChain.start( testValue );
+      }
     };
   };
 }

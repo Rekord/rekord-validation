@@ -1,7 +1,9 @@
 Validation.Rules.endOfDay = function(field, params, database, alias, message)
 {
-  return function(value, model, setMessage)
+  return function(value, model, chain)
   {
-    return endOfDay( value );
+    chain.update( endOfDay( value ) );
+    
+    chain.next();
   };
 };

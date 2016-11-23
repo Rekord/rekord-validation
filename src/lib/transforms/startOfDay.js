@@ -1,7 +1,9 @@
 Validation.Rules.startOfDay = function(field, params, database, alias, message)
 {
-  return function(value, model, setMessage)
+  return function(value, model, chain)
   {
-    return startOfDay( value );
+    chain.update( startOfDay( value ) );
+
+    chain.next();
   };
 };

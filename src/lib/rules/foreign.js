@@ -91,17 +91,23 @@ function foreignRuleGenerator(ruleName, defaultMessage, isInvalid)
       $matchAlias: getAlias( fieldName )
     };
 
-    return function(value, model, setMessage)
+    return function(value, model, chain)
     {
       if ( models && isValue( value ) )
       {
         if ( isInvalid( value, model, models, fieldName ) )
         {
-          setMessage( generateMessage( field, getAlias( field ), value, model, messageTemplate, extra ) );
+          chain.invalid( generateMessage( field, getAlias( field ), value, model, messageTemplate, extra ) );
+        }
+        else
+        {
+          chain.next();
         }
       }
-
-      return value;
+      else
+      {
+        chain.next();
+      }
     };
   };
 

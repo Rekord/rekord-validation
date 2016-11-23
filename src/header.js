@@ -28,6 +28,7 @@
   var Promise = Rekord.Promise;
   var Collection = Rekord.Collection;
   var ModelCollection = Rekord.ModelCollection;
+  var Class = Rekord.Class;
 
   var isEmpty = Rekord.isEmpty;
   var isString = Rekord.isString;
@@ -53,6 +54,3 @@
   var format = Rekord.format;
 
   var parseDate = Rekord.parseDate;
-
-  var addMethod = Rekord.addMethod;
-  var replaceMethod = Rekord.replaceMethod;

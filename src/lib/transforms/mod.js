@@ -7,15 +7,15 @@ Validation.Rules.mod = function(field, params, database, alias, message)
     throw '"' + number + '" is not a valid number for the mod rule.';
   }
 
-  return function(value, model, setMessage)
+  return function(value, model, chain)
   {
     value = tryParseFloat( value );
 
     if ( isNumber( value ) )
     {
-      value = value % number;
+      chain.update( value % number );
     }
 
-    return value;
+    chain.next();
   };
 };

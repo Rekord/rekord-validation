@@ -18,13 +18,13 @@ Validation.Rules.trim = function(field, params, database, alias, message)
 
   })();
 
-  return function(value, model, setMessage)
+  return function(value, model, chain)
   {
     if ( isString( value ) )
     {
-      value = trim( value );
+      chain.update( trim( value ) );
     }
 
-    return value;
+    chain.next();
   };
 };

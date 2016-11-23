@@ -1,4 +1,4 @@
-Rekord.on( Rekord.Events.Plugins, function(model, db, options)
+Rekord.addPlugin(function(model, db, options)
 {
   var validation = options.validation || Database.Defaults.validation;
 
@@ -24,47 +24,56 @@ Rekord.on( Rekord.Events.Plugins, function(model, db, options)
     db.validations[ field ] = Validation.parseRules( rules[ field ], field, db, getAlias, messages[ field ] );
   }
 
-  addMethod( model.prototype, '$validate', function()
+  Class.method( model, '$validate', function(callback, context)
   {
-    var $this = this;
-
     this.$trigger( Model.Events.PreValidate, [this] );
 
     this.$valid = true;
     this.$validations = {};
     this.$validationMessages.length = 0;
 
+    var chainEnds = 0;
+    var chains = [];
+
+    var onChainEnd = function(chain)
+    {
+      var model = chain.model;
+
+      if (!chain.valid)
+      {
+        model.$validations[ chain.field ] = chain.message;
+        model.$validationMessages.push( chain.message );
+        model.$valid = false;
+      }
+
+      if (++chainEnds === chains.length)
+      {
+        model.$trigger( model.$valid ? Model.Events.ValidatePass : Model.Events.ValidateFail, [model] );
+
+        if ( isFunction( callback ) )
+        {
+          callback.call( context || model, model.$valid );
+        }
+      }
+    };
+
     for (var field in db.validations)
     {
-      var chain = db.validations[ field ];
-      var value = this.$get( field );
-      var fieldValid = true;
+      var validations = db.validations[ field ];
+      var chain = new ValidationChain( this, field, validations, onChainEnd );
 
-      var setMessage = function(message) // jshint ignore:line
-      {
-        // Only accept for the first valid message
-        if ( message && fieldValid )
-        {
-          fieldValid = false;
-
-          $this.$validations[ field ] = message;
-          $this.$validationMessages.push( message );
-          $this.$valid = false;
-        }
-      };
-
-      for (var i = 0; i < chain.length && fieldValid && value !== Validation.Stop; i++)
-      {
-        value = chain[ i ]( value, this, setMessage );
-      }
+      chains.push( chain );
     }
 
-    this.$trigger( this.$valid ? Model.Events.ValidatePass : Model.Events.ValidateFail, [this] );
+    for (var i = 0; i < chains.length; i++)
+    {
+      chains[ i ].start();
+    }
 
     return this.$valid;
   });
 
-  replaceMethod( model.prototype, '$init', function($init)
+  Class.replace( model, '$init', function($init)
   {
     return function()
     {
@@ -78,7 +87,7 @@ Rekord.on( Rekord.Events.Plugins, function(model, db, options)
 
   if ( required )
   {
-    replaceMethod( model.prototype, '$save', function($save)
+    Class.replace( model, '$save', function($save)
     {
       return function()
       {
@@ -89,12 +98,25 @@ Rekord.on( Rekord.Events.Plugins, function(model, db, options)
           return Promise.resolve( this );
         }
 
-        if ( !this.$validate() )
-        {
-          return Promise.resolve( this );
-        }
+        var promise = new Rekord.Promise();
+        var modelInstance = this;
+        var args = arguments;
 
-        return $save.apply( this, arguments );
+        this.$validate(function(valid)
+        {
+          if (!valid)
+          {
+            promise.reject( modelInstance );
+          }
+          else
+          {
+            var saving = $save.apply( modelInstance, args );
+
+            saving.then( promise.resolve, promise.reject, promise.noline, promise.cancel, promise );
+          }
+        });
+
+        return promise;
       };
     });
   }
@@ -197,16 +219,18 @@ var Validation =
 
   customValidator: function(functionName, field, database, getAlias, message)
   {
-    return function(value, model, setMessage)
+    return function(value, model, chain)
     {
-      var result = model[ functionName ]( value, getAlias, message );
+      var result = model[ functionName ]( value, getAlias, message, chain );
 
       if ( isString( result ) )
       {
-        setMessage( result );
+        chain.invalid( result );
       }
-
-      return value;
+      else if ( result !== false )
+      {
+        chain.next();
+      }
     };
   }
 };
