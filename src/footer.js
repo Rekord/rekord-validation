@@ -1,5 +1,6 @@
 
   Rekord.Validation = Validation;
+  Rekord.ValidationChain = ValidationChain;
 
   Rekord.ruleGenerator = ruleGenerator;
   Rekord.rangeRuleGenerator = rangeRuleGenerator;

@@ -1,4 +1,4 @@
-/* rekord-validation 1.5.0 - Advanced validation rules for rekord by Philip Diffenderfer */
+/* rekord-validation 1.5.6 - Advanced validation rules for rekord by Philip Diffenderfer */
 // UMD (Universal Module Definition)
 (function (root, factory)
 {
@@ -426,6 +426,27 @@ var Validation =
   Escape: '\\',
   RuleSeparator: ':',
   Stop: {},
+
+  callRules: function(rules, message, field, database, getAlias)
+  {
+    var validations = this.parseRules( rules, field, database, getAlias, message );
+
+    return function (value)
+    {
+      var onChainEnd = function() {};
+      var model = {
+        $get: function () {
+          return value;
+        },
+      };
+      
+      var chain = new ValidationChain( model, field, validations, onChainEnd );
+
+      chain.start();
+
+      return chain;
+    };
+  },
 
   parseRules: function(rules, field, database, getAlias, message)
   {
@@ -2204,6 +2225,7 @@ Validation.Rules.unbase64 = function(field, params, database, alias, message)
 
 
   Rekord.Validation = Validation;
+  Rekord.ValidationChain = ValidationChain;
 
   Rekord.ruleGenerator = ruleGenerator;
   Rekord.rangeRuleGenerator = rangeRuleGenerator;

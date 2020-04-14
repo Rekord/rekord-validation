@@ -138,6 +138,27 @@ var Validation =
   RuleSeparator: ':',
   Stop: {},
 
+  callRules: function(rules, message, field, database, getAlias)
+  {
+    var validations = this.parseRules( rules, field, database, getAlias, message );
+
+    return function (value)
+    {
+      var onChainEnd = function() {};
+      var model = {
+        $get: function () {
+          return value;
+        },
+      };
+      
+      var chain = new ValidationChain( model, field, validations, onChainEnd );
+
+      chain.start();
+
+      return chain;
+    };
+  },
+
   parseRules: function(rules, field, database, getAlias, message)
   {
     var validators = [];
